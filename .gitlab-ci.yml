@@ -8,7 +8,7 @@ variables:
   DEBIAN_BUILD: buildenv-debian
   DEBIAN_X86_CROSS_BUILD: buildenv-debian-x86
   FEDORA_BUILD: buildenv-fedora35
-  UBUNTU16_BUILD: buildenv-ubuntu
+  UBUNTU18_BUILD: buildenv-ubuntu18
   UBUNTU20_BUILD: buildenv-ubuntu20
   CENTOS8_BUILD: buildenv-centos8
   CENTOS7_BUILD: buildenv-centos7
@@ -63,7 +63,7 @@ i386/Debian:
       - ./*.log
       - ./tests/*.log
 
-Ubuntu16.04:
+Ubuntu18.04:
   stage: testing
   image: $CI_REGISTRY/$BUILD_IMAGES_PROJECT:$UBUNTU16_BUILD
   script:
@@ -71,8 +71,6 @@ Ubuntu16.04:
   - autoreconf -fvi
   - ./configure --without-nuttcp-tests
   - make -j$JOBS
-# this version of openconnect doesn't work with IPv6 only
-  - make check -j$JOBS XFAIL_TESTS="ipv6-iface ipv6-small-net"
   tags:
   - shared
   - linux
