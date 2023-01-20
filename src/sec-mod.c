@@ -51,9 +51,9 @@
 
 #define MAINTAINANCE_TIME 310
 
-static int need_maintainance = 0;
-static int need_reload = 0;
-static int need_exit = 0;
+static int need_maintainance; /* = 0 */
+static int need_reload;       /* = 0 */
+static int need_exit;         /* = 0 */
 
 static void reload_server(sec_mod_st *sec);
 

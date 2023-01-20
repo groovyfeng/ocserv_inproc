@@ -44,9 +44,9 @@ asn1_node _kkdcp_pkix1_asn = NULL;
 
 extern struct snapshot_t *config_snapshot;
 
-int syslog_open = 0;
+int syslog_open; /* = 0 */
 sigset_t sig_default_set;
-static unsigned allow_broken_clients = 0;
+static unsigned allow_broken_clients; /* = 0 */
 
 static int set_ws_from_env(worker_st * ws);
 

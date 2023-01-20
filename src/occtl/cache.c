@@ -34,9 +34,9 @@ typedef struct uid_entries_st {
 	unsigned id_size;
 } uid_entries_st;
 
-static uid_entries_st *entries = NULL;
-static unsigned entries_size = 0;
-static unsigned max_entries_size = 0;
+static uid_entries_st *entries;   /* = NULL */
+static unsigned entries_size;     /* = 0 */
+static unsigned max_entries_size; /* = 0 */
 
 void entries_clear(void)
 {

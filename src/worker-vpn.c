@@ -90,12 +90,12 @@
 
 #define WORKER_MAINTENANCE_TIME (10.)
 
-struct worker_st *global_ws = NULL;
+struct worker_st *global_ws; /* = NULL */
 
-static int terminate = 0;
+static int terminate; /* = 0 */
 static int terminate_reason = REASON_SERVER_DISCONNECT;
 
-static struct ev_loop *worker_loop = NULL;
+static struct ev_loop *worker_loop; /* = NULL */
 ev_io command_watcher;
 ev_io tls_watcher;
 ev_io tun_watcher;

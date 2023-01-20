@@ -448,7 +448,7 @@ static int bsd_ifrename(main_server_st *s, struct proc_st *proc)
 	uint8_t ctr;
 	unsigned i;
 	char tun_name[IFNAMSIZ];
-	static unsigned next_tun_nr = 0;
+	static unsigned next_tun_nr; /* = 0 */
 	unsigned renamed = 0;
 
 	fd = socket(AF_INET, SOCK_DGRAM, 0);
@@ -843,7 +843,7 @@ ssize_t tun_write(int sockfd, const void *buf, size_t len)
 	struct ip *iph = (void *)buf;
 	uint32_t head;
 	const uint8_t *data = buf;
-	static int complained = 0;
+	static int complained; /* = 0 */
 	struct iovec iov[2];
 	int ret;
 

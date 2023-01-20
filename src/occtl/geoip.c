@@ -47,7 +47,7 @@ extern void _GeoIP_setup_dbfilename(void);
 
 int geo_setup(void)
 {
-	static unsigned init = 0;
+	static unsigned init; /* = 0 */
 
 	if (init == 0) {
 		p_GeoIP_setup_dbfilename();

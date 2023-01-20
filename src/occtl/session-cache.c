@@ -32,9 +32,9 @@ typedef struct session_entries_st {
 	char session[SAFE_ID_SIZE];
 } session_entries_st;
 
-static session_entries_st *session_entries = NULL;
-static unsigned session_entries_size = 0;
-static unsigned max_session_entries_size = 0;
+static session_entries_st *session_entries; /* = NULL */
+static unsigned session_entries_size;       /* = 0 */
+static unsigned max_session_entries_size;   /* = 0 */
 
 void session_entries_clear(void)
 {

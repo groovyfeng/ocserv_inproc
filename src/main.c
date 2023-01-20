@@ -73,21 +73,20 @@
 # include <libtasn1.h>
 
 extern const asn1_static_node kkdcp_asn1_tab[];
-asn1_node _kkdcp_pkix1_asn = NULL;
-#endif
+asn1_node _kkdcp_pkix1_asn; /* = NULL */
 
 extern struct snapshot_t * config_snapshot;
 
-int worker_argc = 0;
-char **worker_argv = NULL;
+int worker_argc;    /* = 0 */
+char **worker_argv; /* = NULL */
 
 static void listen_watcher_cb (EV_P_ ev_io *w, int revents);
 static void resume_accept_cb (EV_P_ ev_timer *w, int revents);
 
-int syslog_open = 0;
+int syslog_open;                      /* = 0 */
 sigset_t sig_default_set;
-struct ev_loop *main_loop = NULL;
-static unsigned allow_broken_clients = 0;
+struct ev_loop *main_loop;            /* = NULL */
+static unsigned allow_broken_clients; /* = 0 */
 
 typedef struct sec_mod_watcher_st {
 	ev_io sec_mod_watcher;
@@ -97,7 +96,7 @@ typedef struct sec_mod_watcher_st {
 
 /* EV watchers */
 ev_io ctl_watcher;
-sec_mod_watcher_st * sec_mod_watchers = NULL;
+sec_mod_watcher_st * sec_mod_watchers; /* = NULL */
 ev_timer maintenance_watcher;
 ev_timer graceful_shutdown_watcher;
 ev_signal maintenance_sig_watcher;

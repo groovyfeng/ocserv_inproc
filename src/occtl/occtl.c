@@ -420,7 +420,7 @@ static char *merge_args(int argc, char **argv)
 	return data;
 }
 
-static unsigned int cmd_start = 0;
+static unsigned int cmd_start; /* = 0 */
 static char *command_generator(const char *text, int state)
 {
 	static int list_index, len;

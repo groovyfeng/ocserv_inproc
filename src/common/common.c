@@ -36,8 +36,8 @@
 #include "defs.h"
 #include "common/base64-helper.h"
 
-int saved_argc = 0;
-char **saved_argv = NULL;
+int saved_argc; /* = 0 */
+char **saved_argv; /* = NULL */
 
 const char *_vhost_prefix(const char *name)
 {

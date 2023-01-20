@@ -33,9 +33,9 @@ typedef struct ip_entries_st {
 	unsigned ip_size;
 } ip_entries_st;
 
-static ip_entries_st *ip_entries = NULL;
-static unsigned ip_entries_size = 0;
-static unsigned max_ip_entries_size = 0;
+static ip_entries_st *ip_entries; /*  = NULL */
+static unsigned ip_entries_size; /* = 0 */
+static unsigned max_ip_entries_size; /* = 0 */
 
 void ip_entries_clear(void)
 {

@@ -142,14 +142,14 @@ static void check_cfg(vhost_cfg_st *vhost, vhost_cfg_st *defvhost, unsigned sile
 		} \
 	} while (0)
 
-struct snapshot_t * config_snapshot = NULL;
+struct snapshot_t * config_snapshot;  /* = NULL */
 
-char ** pam_auth_group_list = NULL;
-char ** gssapi_auth_group_list = NULL;
-char ** plain_auth_group_list = NULL;
-unsigned pam_auth_group_list_size = 0;
-unsigned gssapi_auth_group_list_size = 0;
-unsigned plain_auth_group_list_size = 0;
+char ** pam_auth_group_list;          /* = NULL */
+char ** gssapi_auth_group_list;       /* = NULL */
+char ** plain_auth_group_list;        /* = NULL */
+unsigned pam_auth_group_list_size;    /* = 0 */
+unsigned gssapi_auth_group_list_size; /* = 0 */
+unsigned plain_auth_group_list_size;  /* = 0 */
 
 
 /* Parses the string ::1/prefix, to return prefix
@@ -1726,7 +1726,7 @@ void clear_vhosts(struct list_head *head)
 
 static void append(const char *option)
 {
-	static int have_previous_val = 0;
+	static int have_previous_val; /* = 0 */
 
 	if (have_previous_val == 0) {
 		have_previous_val = 1;

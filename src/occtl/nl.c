@@ -33,8 +33,8 @@
 #include <netlink/route/link.h>
 #include <inttypes.h>
 
-static struct nl_sock *sock = NULL;
-static int nl_failed = 0;
+static struct nl_sock *sock; /* = NULL */
+static int nl_failed;        /* = 0 */
 
 static int open_netlink(void)
 {
