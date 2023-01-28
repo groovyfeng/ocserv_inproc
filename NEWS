@@ -1,4 +1,5 @@
 * Version 1.1.8 (unreleased)
+- Add autotools with/without check to disable use of sock_diag on OpenWrt.
 - Added "Camouflage" functionality that makes ocserv look
   like a web server to unauthorized parties.
 - Avoid login failure when the end point of server URI
