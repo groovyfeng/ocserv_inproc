@@ -58,8 +58,8 @@ static char *encoded_strings[] =
 int main(void)
 {
 	char *dec;
-	unsigned i;
-	unsigned len;
+	size_t i;
+	size_t len;
 
 	for (i=0;i<ARRAY_SIZE(encoded_strings);i++) {
 		dec = unescape_html(NULL, encoded_strings[i], strlen(encoded_strings[i]), &len);

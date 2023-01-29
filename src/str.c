@@ -31,7 +31,7 @@
 
 void trim_trailing_whitespace(char *str)
 {
-	unsigned len = strlen(str);
+	size_t len = strlen(str);
 	char *p;
 
 	if (len > 0) {

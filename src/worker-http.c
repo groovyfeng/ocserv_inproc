@@ -43,7 +43,7 @@
 
 struct known_urls_st {
 	const char *url;
-	unsigned url_size;
+	size_t url_size;
 	unsigned partial_match;
 	url_handler_fn get_handler;
 	url_handler_fn post_handler;
@@ -676,7 +676,7 @@ void header_value_check(struct worker_st *ws, struct http_req_st *req)
 url_handler_fn http_get_url_handler(const char *url)
 {
 	const struct known_urls_st *p;
-	unsigned len = strlen(url);
+	size_t len = strlen(url);
 
 	p = known_urls;
 	do {
@@ -698,8 +698,8 @@ url_handler_fn http_get_url_handler(const char *url)
 url_handler_fn http_post_url_handler(struct worker_st *ws, const char *url)
 {
 	const struct known_urls_st *p;
-	unsigned len = strlen(url);
-	unsigned i;
+	size_t len = strlen(url);
+	size_t i;
 
 	p = known_urls;
 	do {

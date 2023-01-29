@@ -362,7 +362,7 @@ static void figure_acct_funcs(void *pool, const char *vhostname, struct perm_cfg
 #ifdef HAVE_GSSAPI
 static void parse_kkdcp(struct cfg_st *config, char **urlfw, unsigned urlfw_size)
 {
-	unsigned i, j;
+	size_t i, j;
 	char *path, *server, *port, *realm;
 	struct addrinfo hints, *res;
 	int ret;

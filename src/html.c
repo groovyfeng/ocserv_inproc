@@ -29,11 +29,11 @@
 
 #include "html.h"
 
-char *unescape_html(void *pool, const char *html, unsigned len, unsigned *out_len)
+char *unescape_html(void *pool, const char *html, size_t len, size_t *out_len)
 {
 	char *msg;
 	int pos;
-	unsigned i;
+	size_t i;
 
 	msg = talloc_size(pool, len + 1);
 	if (msg == NULL)
@@ -111,11 +111,11 @@ char *unescape_html(void *pool, const char *html, unsigned len, unsigned *out_le
 	return NULL;
 }
 
-char *unescape_url(void *pool, const char *url, unsigned len, unsigned *out_len)
+char *unescape_url(void *pool, const char *url, size_t len, size_t *out_len)
 {
 	char *msg;
 	int pos;
-	unsigned i;
+	size_t i;
 
 	msg = talloc_size(pool, len + 1);
 	if (msg == NULL)
@@ -152,11 +152,11 @@ char *unescape_url(void *pool, const char *url, unsigned len, unsigned *out_len)
 	return msg;
 }
 
-char *escape_url(void *pool, const char *url, unsigned len, unsigned *out_len)
+char *escape_url(void *pool, const char *url, size_t len, size_t *out_len)
 {
 	char *msg;
 	int pos;
-	unsigned i;
+	size_t i;
 
 	msg = talloc_size(pool, 3*len + 1);
 	if (msg == NULL)

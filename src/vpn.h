@@ -228,7 +228,7 @@ struct cfg_st {
 	unsigned int stats_report_time;
 
 	kkdcp_st *kkdcp;
-	unsigned int kkdcp_size;
+	size_t kkdcp_size;
 
 	char *cert_user_oid;	/* The OID that will be used to extract the username */
 	char *cert_group_oid;	/* The OID that will be used to extract the groupname */

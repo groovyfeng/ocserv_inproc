@@ -34,11 +34,11 @@ static int handle_help_cmd(CONN_TYPE * conn, const char *arg, cmd_params_st *par
 static int handle_exit_cmd(CONN_TYPE * conn, const char *arg, cmd_params_st *params);
 
 typedef struct {
-	char *name;
-	unsigned name_size;
+	const char *name;
+	size_t name_size;
 	char *arg;
 	cmd_func func;
-	char *doc;
+	const char *doc;
 	int always_show;
 	int need_preconn;
 } commands_st;
@@ -135,8 +135,8 @@ unsigned need_help(const char *arg)
 unsigned check_cmd_help(const char *line)
 {
 	unsigned int i;
-	unsigned len = (line!=NULL)?strlen(line):0;
-	unsigned status = 0, tlen;
+	size_t len = (line!=NULL)?strlen(line):0, tlen;
+	unsigned status = 0;
 
 	while (len > 0 && (line[len - 1] == '?' || whitespace(line[len - 1])))
 		len--;
@@ -425,8 +425,8 @@ static char *command_generator(const char *text, int state)
 {
 	static int list_index, len;
 	static int entries_idx;
-	unsigned name_size;
-	char *name, *arg;
+	size_t name_size;
+	const char *name, *arg;
 	char *ret;
 
 	/* If this is a new word to complete, initialize now.  This includes

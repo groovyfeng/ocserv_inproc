@@ -21,8 +21,8 @@
 #ifndef OC_HTML_H
 # define OC_HTML_H
 
-char* unescape_html(void *pool, const char *html, unsigned len, unsigned *out_len);
-char *unescape_url(void *pool, const char *url, unsigned len, unsigned *out_len);
-char *escape_url(void *pool, const char *url, unsigned len, unsigned *out_len);
+char* unescape_html(void *pool, const char *html, size_t len, size_t *out_len);
+char *unescape_url(void *pool, const char *url, size_t len, size_t *out_len);
+char *escape_url(void *pool, const char *url, size_t len, size_t *out_len);
 
 #endif

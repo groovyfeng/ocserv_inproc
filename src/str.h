@@ -45,7 +45,7 @@ typedef char *(*str_get_func)(void *pool, const char *input);
 
 typedef struct {
 	const char *pattern;
-	unsigned pattern_length;
+	size_t pattern_length;
 	const char *rep_val;
 	str_get_func rep_func;
 	const void *rep_func_input;

@@ -43,8 +43,8 @@ static char *decoded_strings[] =
 int main(void)
 {
 	char *dec, *url;
-	unsigned i;
-	unsigned len;
+	size_t i;
+	size_t len;
 
 	for (i=0;i<ARRAY_SIZE(strings);i++) {
 		dec = unescape_url(NULL, strings[i], strlen(strings[i]), &len);
