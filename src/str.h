@@ -23,7 +23,10 @@
 #ifndef OC_STR_H
 #define OC_STR_H
 
-#include <config.h>
+#ifndef INCLUDED_CONFIG_H
+# define INCLUDED_CONFIG_H
+# include <config.h>
+#endif
 #include <stdint.h>
 
 #define STR_TAB_INIT(t, s_t) memset(t, 0, s_t)

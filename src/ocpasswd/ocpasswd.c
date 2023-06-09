@@ -38,10 +38,6 @@
 # include <crypt.h>
 #endif
 
-/* Gnulib portability files. */
-#include <getpass.h>
-#include <minmax.h>
-
 #define DEFAULT_OCPASSWD "/etc/ocserv/ocpasswd"
 
 static const char alphabet[] =

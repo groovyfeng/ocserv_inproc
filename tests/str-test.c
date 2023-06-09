@@ -15,7 +15,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#define _GNU_SOURCE
+#include <config.h>
+#define INCLUDED_CONFIG_H
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
