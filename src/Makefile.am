@@ -163,7 +163,7 @@ noinst_LIBRARIES += libcommon.a
 EXTRA_DIST += ccan/licenses/BSD-MIT ccan/licenses/CC0 ccan/licenses/LGPL-2.1
 
 noinst_LIBRARIES += libccan.a
-libccan_a_CPPFLAGS = $(AM_CPPFLAGS) -I$(srcdir) -I$(srcdir)/ccan
+libccan_a_CPPFLAGS = $(AM_CPPFLAGS) -I$(srcdir)
 libccan_a_SOURCES = ccan/build_assert/build_assert.h ccan/check_type/check_type.h \
 	ccan/container_of/container_of.h ccan/hash/hash.c ccan/hash/hash.h \
 	ccan/htable/htable.c ccan/htable/htable.h ccan/htable/htable_type.h \
