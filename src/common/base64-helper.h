@@ -18,10 +18,11 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  */
-#ifndef BASE64_HELPER_H
-# define BASE64_HELPER_H
+#ifndef OC_COMMON_BASE64_HELPER_H
+#define OC_COMMON_BASE64_HELPER_H
 
-#include <nettle/base64.h>
+#include <stddef.h>
+#include <stdint.h>
 
 /* Prototypes compatible with the gnulib's */
 

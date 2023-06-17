@@ -19,15 +19,18 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  */
 #ifndef OC_TUN_H
-# define OC_TUN_H
+#define OC_TUN_H
 
-#include <vpn.h>
-#include <string.h>
-#include <ccan/list/list.h>
+#include "config.h"
+
+#include <net/if.h>
+#include <sys/types.h>
+
+#include <stddef.h>
 
 struct tun_lease_st {
 
-	char name[IFNAMSIZ];
+	char name[IF_NAMESIZE];
 
         /* this is used temporarily. */
 	int fd;

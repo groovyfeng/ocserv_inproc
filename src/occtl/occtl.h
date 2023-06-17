@@ -1,9 +1,29 @@
-#ifndef OCCTL_H
-# define OCCTL_H
+/*
+ * Copyright (C) 2014-2016 Red Hat
+ *
+ * Author: Nikos Mavrogiannopoulos
+ *
+ * This file is part of ocserv.
+ *
+ * ocserv is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * ocserv is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+#ifndef OC_OCCTL_OCCTL_H
+#define OC_OCCTL_OCCTL_H
 
-#include <stdlib.h>
-#include <time.h>
-#include "common.h"
+#include "config.h"
+
+#include "common/common.h"
 
 #ifdef HAVE_ORIG_READLINE
 # include <readline/readline.h>
@@ -11,6 +31,10 @@
 #else
 # include <readline.h>
 #endif
+
+#include <stdint.h>
+#include <stdio.h>
+#include <time.h>
 
 #define DATE_TIME_FMT "%Y-%m-%d %H:%M"
 #define MAX_TMPSTR_SIZE 64

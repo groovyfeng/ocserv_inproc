@@ -22,9 +22,12 @@
 #ifndef OC_GETTIME_H
 #define OC_GETTIME_H
 
-#include <config.h>
-#include <time.h>
+#include "config.h"
+
 #include <sys/time.h>
+
+#include <stdint.h>
+#include <time.h>
 
 /* emulate gnulib's gettime using gettimeofday to avoid linking to
  * librt */

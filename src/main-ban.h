@@ -19,9 +19,14 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  */
 #ifndef OC_MAIN_BAN_H
-# define OC_MAIN_BAN_H
+#define OC_MAIN_BAN_H
 
-# include "main.h"
+#include "config.h"
+
+#include "main.h"
+
+#include <stdint.h>
+#include <time.h>
 
 typedef struct inaddr_st {
 	uint8_t ip[16];

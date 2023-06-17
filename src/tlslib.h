@@ -22,11 +22,23 @@
 #ifndef OC_TLSLIB_H
 #define OC_TLSLIB_H
 
+#include "config.h"
+
+#include "vpn.h"
+#include "ccan/htable/htable.h"
+
 #include <gnutls/gnutls.h>
 #include <gnutls/pkcs11.h>
-#include <vpn.h>
-#include <ccan/htable/htable.h>
+
+#include <sys/socket.h>
+#include <sys/types.h>
+
 #include <errno.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <time.h>
 
 # if GNUTLS_VERSION_NUMBER < 0x030200
 #  define GNUTLS_DTLS1_2 202

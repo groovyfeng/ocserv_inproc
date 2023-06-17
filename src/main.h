@@ -20,24 +20,29 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  */
 #ifndef OC_MAIN_H
-# define OC_MAIN_H
+#define OC_MAIN_H
 
+#include "config.h"
+
+#include "common/common.h"
+#include "common/hmac.h"
+#include "ipc.pb-c.h"
+#include "namespace.h"
+#include "tlslib.h"
+#include "vhost.h"
+#include "vpn.h"
+
+#include <ev.h>
+
+#include <unistd.h>
+#include <net/if.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/resource.h>
-#include <unistd.h>
-#include <net/if.h>
-#include <vpn.h>
-#include <tlslib.h>
-#include "ipc.pb-c.h"
-#include <common.h>
 #include <sys/un.h>
 #include <sys/uio.h>
+
 #include <signal.h>
-#include <ev.h>
-#include <hmac.h>
-#include "vhost.h"
-#include <namespace.h>
 
 #if defined(__FreeBSD__) || defined(__OpenBSD__)
 # include <limits.h>

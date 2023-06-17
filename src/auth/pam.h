@@ -18,17 +18,22 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  */
-#ifndef PAM_H
-#define PAM_H
-
-#include <config.h>
-#include <sec-mod-auth.h>
+#ifndef OC_AUTH_PAM_H
+#define OC_AUTH_PAM_H
 
 #ifdef HAVE_PAM
 
-#include <security/pam_appl.h>
-#include <str.h>
+#include "config.h"
+
+#include "sec-mod-auth.h"
+#include "str.h"
+#include "vpn.h"
+
 #include <pcl.h>
+
+#include <security/pam_appl.h>
+
+#include <stddef.h>
 
 extern const struct auth_mod_st pam_auth_funcs;
 

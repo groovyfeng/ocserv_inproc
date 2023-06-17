@@ -21,19 +21,21 @@
 #ifndef OC_VPN_H
 #define OC_VPN_H
 
-#include <config.h>
-#include <gnutls/gnutls.h>
+#include "config.h"
+
+#include "auth/common.h"
+#include "ipc.pb-c.h"
+#include "ccan/htable/htable.h"
+#include "ccan/list/list.h"
+
 #include <http_parser.h>
-#include <ccan/htable/htable.h>
-#include <ccan/list/list.h>
-#include <sys/types.h>
-#include <sys/socket.h>
+#include <gnutls/gnutls.h>
+
 #include <unistd.h>
 #include <net/if.h>
 #include <netinet/in.h>
-#include <auth/common.h>
-
-#include <ipc.pb-c.h>
+#include <sys/socket.h>
+#include <sys/types.h>
 
 #ifdef __GNUC__
 # define _OCSERV_GCC_VERSION (__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__)
@@ -445,7 +447,7 @@ struct dtls_st;
 
 #define DEFAULT_CONFIG_ENTRIES 96
 
-#include <tun.h>
+#include "tun.h"
 
 unsigned extract_prefix(char *network);
 
@@ -457,7 +459,7 @@ unsigned extract_prefix(char *network);
 /* Helper structures */
 enum option_types { OPTION_NUMERIC, OPTION_STRING, OPTION_BOOLEAN, OPTION_MULTI_LINE };
 
-#include <ip-util.h>
+#include "ip-util.h"
 
 void reload_cfg_file(void *pool, struct list_head *configs, unsigned sec_mod);
 void clear_old_configs(struct list_head *configs);

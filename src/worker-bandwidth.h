@@ -19,11 +19,12 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  */
 #ifndef OC_WORKER_BANDWIDTH_H
-# define OC_WORKER_BANDWIDTH_H
+#define OC_WORKER_BANDWIDTH_H
 
-#include <gettime.h>
+#include "config.h"
+
+#include <string.h>
 #include <time.h>
-#include <unistd.h>
 
 #define COUNT_UPDATE_MS 500
 

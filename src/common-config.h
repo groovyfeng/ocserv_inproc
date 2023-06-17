@@ -19,11 +19,14 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  */
 #ifndef OC_COMMON_CONFIG_H
-# define OC_COMMON_CONFIG_H
+#define OC_COMMON_CONFIG_H
 
-#include <config.h>
-#include <vpn.h>
-#include <ipc.pb-c.h>
+#include "config.h"
+
+#include "ipc.pb-c.h"
+#include "vpn.h"
+
+#include <time.h>
 
 char *sanitize_config_value(void *pool, const char *value);
 int _add_multi_line_val(void *pool, char ***varname, size_t *num,

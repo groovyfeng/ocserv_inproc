@@ -18,12 +18,14 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  */
-#ifndef DIE_H
-# define DIE_H
+#ifndef OC_COMMON_SYSTEM_H
+#define OC_COMMON_SYSTEM_H
 
-# include <config.h>
-# include <signal.h>
-# include <unistd.h>
+#include "config.h"
+
+#include <sys/types.h>
+
+#include <signal.h>
 
 #ifdef HAVE_SIGHANDLER_T
 # define SIGHANDLER_T sighandler_t
@@ -42,7 +44,5 @@ void kill_on_parent_kill(int sig);
 SIGHANDLER_T ocsignal(int signum, SIGHANDLER_T handler);
 
 int check_upeer_id(const char *mod, int debug, int cfg, uid_t uid, uid_t gid, uid_t *ruid, pid_t *pid);
-
-
 
 #endif

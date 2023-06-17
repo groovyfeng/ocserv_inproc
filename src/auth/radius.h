@@ -18,18 +18,22 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  */
-#ifndef RADIUS_H
-# define RADIUS_H
+#ifndef OC_AUTH_RADIUS_H
+#define OC_AUTH_RADIUS_H
 
-# include <sec-mod-auth.h>
+#ifdef HAVE_RADIUS
 
-# ifdef HAVE_RADIUS
+#include "ip-util.h"
+#include "sec-mod-auth.h"
 
-#  ifdef LEGACY_RADIUS
-#   include <freeradius-client.h>
-#  else
-#   include <radcli/radcli.h>
-#  endif
+#ifdef LEGACY_RADIUS
+#include <freeradius-client.h>
+#else
+#include <radcli/radcli.h>
+#endif
+
+#include <stddef.h>
+#include <stdint.h>
 
 struct radius_vhost_ctx {
 	rc_handle *rh;
@@ -75,5 +79,6 @@ struct radius_ctx_st {
 
 extern const struct auth_mod_st radius_auth_funcs;
 
-# endif
+#endif
+
 #endif

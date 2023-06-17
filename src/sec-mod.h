@@ -21,14 +21,14 @@
 #ifndef OC_SEC_MOD_H
 # define OC_SEC_MOD_H
 
-#include <gnutls/abstract.h>
-#include <ccan/htable/htable.h>
-#include <nettle/base64.h>
-#include <tlslib.h>
-#include <hmac.h>
 #include "common/common.h"
-
+#include "common/hmac.h"
+#include "tlslib.h"
 #include "vhost.h"
+#include "ccan/htable/htable.h"
+
+#include <gnutls/abstract.h>
+#include <nettle/base64.h>
 
 #define SESSION_STR "(session: %.6s)"
 #define MAX_GROUPS 128

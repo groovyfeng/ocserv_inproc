@@ -16,9 +16,11 @@
  */
 
 #ifndef OC_NAMESPACE_H
-# define OC_NAMESPACE_H
+#define OC_NAMESPACE_H
 
-#include <config.h>
+#include "config.h"
+
+#include "vpn.h"
 
 struct netns_fds {
 	int default_fd;
@@ -32,6 +34,8 @@ int open_namespaces(struct netns_fds *netns, struct perm_cfg_st *config);
 int close_namespaces(struct netns_fds *netns);
 
 #else /* __linux__ */
+
+#include <sys/socket.h>
 
 #define open_namespaces(netns, config) (-1)
 #define close_namespaces(netns) (-1)

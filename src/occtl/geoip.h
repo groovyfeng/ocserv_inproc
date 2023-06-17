@@ -16,10 +16,9 @@
  * Authors:
  *   Nikos Mavrogiannopoulos <n.mavrogiannopoulos@gmail.com>
  */
+#ifndef OC_OCCTL_JSON_HGEOIP_H
+#define OC_OCCTL_JSON_HGEOIP_H
 
-#ifndef GEOIP_H
-# define GEOIP_H
-
-char * geo_lookup(const char *ip, char *buf, unsigned buf_size);
+char *geo_lookup(const char *ip, char *buf, unsigned buf_size);
 
 #endif

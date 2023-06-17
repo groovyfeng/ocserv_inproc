@@ -19,17 +19,24 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  */
-#ifndef COMMON_H
-# define COMMON_H
+#ifndef OC_COMMON_COMMON_H
+#define OC_COMMON_COMMON_H
 
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <ipc.pb-c.h>
-#include <talloc.h>
-#include <time.h>
-#include <string.h>
+#include "config.h"
+
+#include "ipc.pb-c.h"
+
 #include <nettle/base64.h>
+#include <talloc.h>
+
+#include <netinet/in.h>
+#include <sys/socket.h>
+#include <sys/types.h>
+
 #include <errno.h>
+#include <stdint.h>
+#include <string.h>
+#include <time.h>
 
 void _talloc_free2(void *ctx, void *ptr);
 void *_talloc_size2(void *ctx, size_t size);

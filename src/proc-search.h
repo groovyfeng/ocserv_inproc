@@ -19,13 +19,17 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  */
 #ifndef OC_PROC_SEARCH_H
-# define OC_PROC_SEARCH_H
+#define OC_PROC_SEARCH_H
 
-#include <vpn.h>
-#include <string.h>
+#include "config.h"
+
+#include "main.h"
+#include "vpn.h"
+#include "ccan/hash/hash.h"
+
 #include <sys/socket.h>
-#include <ccan/hash/hash.h>
-#include <main.h>
+
+#include <stdint.h>
 
 struct proc_st *proc_search_single_ip(struct main_server_st *s,
 			       struct sockaddr_storage *sockaddr,

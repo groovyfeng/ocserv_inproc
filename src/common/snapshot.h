@@ -18,10 +18,12 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  */
+#ifndef OC_COMMON_SNAPSHOT_H
+#define OC_COMMON_SNAPSHOT_H
 
-#ifndef SNAPSHOT_H
-#define SNAPSHOT_H
+#include <stddef.h>
 
+struct htable_iter;
 struct snapshot_t;
 struct snapshot_iter_t;
 

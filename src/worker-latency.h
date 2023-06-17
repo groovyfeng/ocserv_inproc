@@ -18,7 +18,15 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #ifndef OC_WORKER_LATENCY_H
-# define OC_WORKER_LATENCY_H
+#define OC_WORKER_LATENCY_H
+
+#include "config.h"
+
+#include "worker.h"
+
+#include <sys/types.h>
+
+#include <time.h>
 
 ssize_t dtls_pull_latency(gnutls_transport_ptr_t ptr, void *data, size_t size);
 void send_latency_stats_delta_to_main(worker_st * ws, time_t now);

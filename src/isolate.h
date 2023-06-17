@@ -15,10 +15,10 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-
 #ifndef OC_ISOLATE_H
-# define OC_ISOLATE_H
+#define OC_ISOLATE_H
 
+#include "main.h"
 
 void init_fd_limits_default(struct main_server_st * s);
 

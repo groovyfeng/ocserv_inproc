@@ -19,9 +19,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  */
 #ifndef OC_SEC_MOD_SUP_CONFIG_H
-# define OC_SEC_MOD_SUP_CONFIG_H
+#define OC_SEC_MOD_SUP_CONFIG_H
 
-#include <sec-mod.h>
+#include "sec-mod.h"
+#include "vpn.h"
 
 #define SUP_CONFIG_FILE 1
 #define SUP_CONFIG_RADIUS 2

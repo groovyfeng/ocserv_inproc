@@ -18,11 +18,12 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  */
+#ifndef OC_COMMON_HMAC_H
+#define OC_COMMON_HMAC_H
 
-
-#ifndef HMAC_H
-#define HMAC_H
+#include <stddef.h>
 #include <stdbool.h>
+#include <stdint.h>
 
 #define HMAC_DIGEST_SIZE 32
 

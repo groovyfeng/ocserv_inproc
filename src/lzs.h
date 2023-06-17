@@ -14,9 +14,8 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
  */
-
 #ifndef OC_LZS_H
-# define OC_LZS_H
+#define OC_LZS_H
 
 int lzs_decompress(unsigned char *dst, int dstlen, const unsigned char *src, int srclen);
 int lzs_compress(unsigned char *dst, int dstlen, const unsigned char *src, int srclen);

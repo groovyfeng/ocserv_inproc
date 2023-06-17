@@ -18,9 +18,9 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+#ifndef OC_OCCTL_JSON_H
+#define OC_OCCTL_JSON_H
 
-#ifndef JSON_H
-# define JSON_H
 char *json_escape_val(char *tmp, unsigned tmp_size, const char *val);
 
 #endif

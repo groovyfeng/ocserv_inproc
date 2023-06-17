@@ -18,10 +18,10 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  */
-#ifndef SUP_CONFIG_RADIUS_H
-#define SUP_CONFIG_RADIUS_H
+#ifndef OC_SUP_CONFIG_RADIUS_H
+#define OC_SUP_CONFIG_RADIUS_H
 
-#include <sec-mod-sup-config.h>
+#include "sec-mod-sup-config.h"
 
 extern struct config_mod_st radius_sup_config;
 

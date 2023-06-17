@@ -20,10 +20,15 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  */
 #ifndef OC_IP_UTIL_H
-# define OC_IP_UTIL_H
+#define OC_IP_UTIL_H
 
-#include <sys/socket.h>
+#include "config.h"
+
 #include <netinet/in.h>
+#include <sys/socket.h>
+
+#include <stddef.h>
+#include <stdint.h>
 
 #define MAX_IP_STR 46
 // Lower MTU bound is the value defined in RFC 791
