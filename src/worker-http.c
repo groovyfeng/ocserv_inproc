@@ -18,11 +18,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <config.h>
-#include <stdlib.h>
-#include <stdarg.h>
-#include <stdio.h>
-#include <string.h>
+#include "config.h"
+
+#include "worker.h"
+#include "common/base64-helper.h"
+#include "vpn.h"
 
 #ifdef ENABLE_COMPRESSION
 # ifdef HAVE_LZ4
@@ -32,11 +32,9 @@
 #endif
 
 #include <nettle/base64.h>
-#include <base64-helper.h>
-#include <ctype.h>
 
-#include <vpn.h>
-#include <worker.h>
+#include <ctype.h>
+#include <string.h>
 
 #define CS_AES128_GCM "OC-DTLS1_2-AES128-GCM"
 #define CS_AES256_GCM "OC-DTLS1_2-AES256-GCM"

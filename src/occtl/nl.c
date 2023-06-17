@@ -19,18 +19,20 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <config.h>
+#include "config.h"
+
+#include "occtl/occtl.h"
+
 #include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-#include <occtl/occtl.h>
+#include <time.h>
 
 #if defined(HAVE_LIBNL) && defined(__linux__)
 
+#include <unistd.h>
 #include <netlink/netlink.h>
 #include <netlink/socket.h>
 #include <netlink/route/link.h>
+
 #include <inttypes.h>
 
 static struct nl_sock *sock = NULL;

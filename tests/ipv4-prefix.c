@@ -15,10 +15,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <talloc.h>
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <talloc.h>
 
 #include "../src/ip-util.h"
 #include "../src/ip-util.c"

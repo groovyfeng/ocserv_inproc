@@ -17,24 +17,27 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <config.h>
+#include "config.h"
+
+#include "tun.h"
+#include "common/cloexec.h"
+#include "ip-lease.h"
+#include "main.h"
+#include "vhost.h"
+#include "vpn.h"
+#include "ccan/list/list.h"
 
 #include <fcntl.h>
-#include <sys/types.h>
-#include <sys/stat.h>
+#include <netdb.h>
 #include <arpa/inet.h>
-#include <sys/socket.h>
 #include <net/if.h>
 #include <netinet/in.h>
 #include <netinet/ip.h>
 #include <sys/ioctl.h>
+#include <sys/stat.h>
+#include <sys/socket.h>
+#include <sys/types.h>
 #include <sys/uio.h>
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
-#include <errno.h>
-#include <cloexec.h>
-#include <ip-lease.h>
 
 #if defined(HAVE_LINUX_IF_TUN_H)
 # include <linux/if_tun.h>
@@ -42,12 +45,10 @@
 # include <net/if_tun.h>
 #endif
 
-#include <netdb.h>
-#include <vpn.h>
-#include <tun.h>
-#include <main.h>
-#include <ccan/list/list.h>
-#include "vhost.h"
+#include <errno.h>
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
 
 #if defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__DragonFly__)
 # include <net/if_var.h>
@@ -62,8 +63,8 @@
 
 #ifdef __linux__
 
-#include <net/route.h>
 #include <linux/types.h>
+#include <net/route.h>
 
 struct in6_ifreq {
 	struct in6_addr ifr6_addr;
@@ -434,7 +435,7 @@ static int set_network_info(main_server_st * s, struct proc_st *proc)
 	return ret;
 }
 
-#include <ccan/hash/hash.h>
+#include "ccan/hash/hash.h"
 
 #if defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__DragonFly__)
 

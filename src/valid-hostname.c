@@ -17,11 +17,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <config.h>
-#include <stdlib.h>
-#include <stdarg.h>
-#include <stdio.h>
-#include <string.h>
+#include "config.h"
+
 #include <ctype.h>
 
 unsigned valid_hostname(const char *host)

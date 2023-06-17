@@ -17,16 +17,14 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <config.h>
+#include "config.h"
 
-#include <stdlib.h>
-#include <stdarg.h>
-#include <stdio.h>
-#include <string.h>
-
-#include <vpn.h>
-#include <worker.h>
 #include "common.h"
+#include "worker.h"
+#include "vpn.h"
+
+#include <stdint.h>
+#include <string.h>
 
 #ifdef HAVE_GSSAPI
 

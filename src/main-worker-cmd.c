@@ -16,49 +16,49 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <config.h>
+#include "config.h"
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-#include <sys/types.h>
-#include <sys/uio.h>
-#include <sys/select.h>
-#include <sys/wait.h>
-#include <fcntl.h>
-#include <sys/socket.h>
-#include <netdb.h>
-#include <system.h>
-#include <errno.h>
-#include <limits.h>
-#include <sys/ioctl.h>
+#include "common/cloexec.h"
+#include "common/common.h"
+#include "common/system.h"
+#include "ip-lease.h"
+#include "ipc.pb-c.h"
+#include "main.h"
+#include "main-ban.h"
+#include "proc-search.h"
+#include "route-add.h"
+#include "script-list.h"
+#include "sec-mod.h"
+#include "setproctitle.h"
+#include "str.h"
+#include "tlslib.h"
+#include "tun.h"
+#include "vpn.h"
+#include "ccan/list/list.h"
+
+#include <ev.h>
 #include <gnutls/gnutls.h>
 #include <gnutls/crypto.h>
-#include <tlslib.h>
+
+#include <fcntl.h>
+#include <netdb.h>
+#include <unistd.h>
+#include <sys/select.h>
+#include <sys/socket.h>
+#include <sys/types.h>
+#include <sys/uio.h>
+#include <sys/wait.h>
+#include <sys/ioctl.h>
 #include <sys/un.h>
-#include <cloexec.h>
-#include "common.h"
-#include "str.h"
-#include "setproctitle.h"
-#include <sec-mod.h>
-#include <route-add.h>
-#include <ip-lease.h>
-#include <proc-search.h>
-#include <ipc.pb-c.h>
-#include <script-list.h>
-#include <inttypes.h>
-#include <ev.h>
 
 #ifdef HAVE_MALLOC_TRIM
 # include <malloc.h>
 #endif
 
-#include <vpn.h>
-#include <tun.h>
-#include <main.h>
-#include <main-ban.h>
-#include <ccan/list/list.h>
+#include <errno.h>
+#include <stddef.h>
+#include <stdint.h>
+#include <string.h>
 
 int set_tun_mtu(main_server_st * s, struct proc_st *proc, unsigned mtu)
 {

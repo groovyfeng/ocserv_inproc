@@ -20,14 +20,16 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <config.h>
+#include "config.h"
+
+#include "str.h"
+#include "main.h"
+#include "vasprintf.h"
+
 #include <ctype.h>
-#include <string.h>
 #include <stddef.h>
 #include <stdlib.h>
-#include <str.h>
-#include <main.h>
-#include "vasprintf.h"
+#include <string.h>
 
 void trim_trailing_whitespace(char *str)
 {

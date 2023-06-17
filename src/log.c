@@ -15,20 +15,22 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <config.h>
-#include <syslog.h>
-#include <fcntl.h>
-#include <sys/socket.h>
-#include <netdb.h>
-#include <string.h>
-#include <stdio.h>
-#include <stdarg.h>
-#include <arpa/inet.h>
-#include <base64-helper.h>
+#include "config.h"
 
-#include <worker.h>
-#include <main.h>
-#include <sec-mod.h>
+#include "common/base64-helper.h"
+#include "main.h"
+#include "sec-mod.h"
+#include "worker.h"
+
+#include <fcntl.h>
+#include <netdb.h>
+#include <syslog.h>
+#include <arpa/inet.h>
+#include <sys/socket.h>
+
+#include <stdarg.h>
+#include <stdio.h>
+#include <string.h>
 
 /* Returns zero when the given priority is not sufficient
  * for logging */

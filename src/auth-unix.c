@@ -17,14 +17,17 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <config.h>
-#include <stdio.h>
-#include <string.h>
-#include <sys/types.h>
-#include <pwd.h>
-#include <grp.h>
-#include <sec-mod-auth.h>
+#include "config.h"
+
 #include "auth-unix.h"
+#include "sec-mod-auth.h"
+
+#include <grp.h>
+#include <pwd.h>
+#include <sys/types.h>
+
+#include <stddef.h>
+#include <string.h>
 
 #ifdef HAVE_GET_USER_AUTH_GROUP
 /* Fills-in groupname, if the user is in a unix group, via getpwnam().

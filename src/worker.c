@@ -16,13 +16,16 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <config.h>
+#include "config.h"
 
-#include <sys/resource.h>
-#include <locale.h>
-
-#include <system.h>
+#include "worker.h"
+#include "common/base64-helper.h"
+#include "common/snapshot.h"
+#include "common/system.h"
+#include "isolate.h"
+#include "main.h"
 #include "setproctitle.h"
+
 #ifdef HAVE_LIBWRAP
 #include <tcpd.h>
 #endif
@@ -30,11 +33,11 @@
 #ifdef HAVE_LIBSYSTEMD
 #include <systemd/sd-daemon.h>
 #endif
-#include <main.h>
-#include <worker.h>
-#include <base64-helper.h>
-#include <snapshot.h>
-#include <isolate.h>
+
+#include <sys/resource.h>
+
+#include <locale.h>
+#include <signal.h>
 
 #ifdef HAVE_GSSAPI
 #include <libtasn1.h>

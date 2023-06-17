@@ -19,15 +19,20 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <config.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <time.h>
-#include <system.h>
+#include "config.h"
+
+#include "occtl/occtl.h"
+#include "common/system.h"
+
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
+#endif
+
 #include <ctype.h>
 #include <locale.h>
-#include <occtl/occtl.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 static int handle_reset_cmd(CONN_TYPE * conn, const char *arg, cmd_params_st *params);
 static int handle_help_cmd(CONN_TYPE * conn, const char *arg, cmd_params_st *params);

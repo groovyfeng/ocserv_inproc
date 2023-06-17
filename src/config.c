@@ -16,47 +16,48 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <config.h>
+#include "config.h"
 
+#include "acct/pam.h"
+#include "acct/radius.h"
+#include "auth/common.h"
+#include "auth/gssapi.h"
+#include "auth/openidconnect.h"
+#include "auth/pam.h"
+#include "auth/plain.h"
+#include "auth/radius.h"
+#include "common-config.h"
+#include "common/common.h"
+#include "common/snapshot.h"
+#include "ip-util.h"
+#include "main.h"
+#include "occtl/ctl.h"
+#include "sec-mod-sup-config.h"
+#include "sec-mod-acct.h"
+#include "tlslib.h"
+#include "vpn.h"
+#include "inih/ini.h"
+
+#include <gnutls/crypto.h>
+
+#include <fcntl.h>
+#include <dirent.h>
+#include <getopt.h>
+#include <grp.h>
+#include <netdb.h>
+#include <pwd.h>
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
+#endif
+#include <unistd.h>
+#include <sys/socket.h>
+#include <sys/types.h>
+
+#include <assert.h>
+#include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
-#include <sys/types.h>
-#include <pwd.h>
-#include <grp.h>
-#include <fcntl.h>
-#include <limits.h>
-#include <common.h>
-#include <ip-util.h>
-#include <ctype.h>
-#include <auth/pam.h>
-#include <acct/pam.h>
-#include <auth/radius.h>
-#include <acct/radius.h>
-#include <auth/plain.h>
-#include <auth/gssapi.h>
-#include <auth/openidconnect.h>
-#include <auth/common.h>
-#include <sec-mod-sup-config.h>
-#include <sec-mod-acct.h>
-#include "inih/ini.h"
-
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <dirent.h>
-#include <netdb.h>
-#include <assert.h>
-
-#include <vpn.h>
-#include <main.h>
-#include <tlslib.h>
-#include <occtl/ctl.h>
-#include <gnutls/crypto.h>
-#include "common-config.h"
-
-#include <getopt.h>
-#include <snapshot.h>
 
 #define OLD_DEFAULT_CFG_FILE "/etc/ocserv.conf"
 #define DEFAULT_CFG_FILE "/etc/ocserv/ocserv.conf"

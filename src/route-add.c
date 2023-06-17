@@ -17,22 +17,21 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <config.h>
-#include <stdbool.h>
+#include "config.h"
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <errno.h>
-#include <limits.h>
-#include <signal.h>
+#include "route-add.h"
+#include "common/common.h"
+#include "main.h"
+#include "str.h"
+
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/wait.h>
 
-#include <route-add.h>
-#include <main.h>
-#include <str.h>
-#include <common.h>
+#include <errno.h>
+#include <stdlib.h>
+#include <stdlib.h>
+#include <signal.h>
 
 static
 int call_script(main_server_st *s, proc_st *proc, const char *cmd)

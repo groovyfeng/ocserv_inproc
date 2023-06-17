@@ -1,8 +1,8 @@
-#if HAVE_CONFIG_H
-# include "config.h"
-#endif
+#include "config.h"
 
 #include <libtasn1.h>
+
+#include <stddef.h>
 
 const asn1_static_node kkdcp_asn1_tab[] = {
   { "KKDCP", 536872976, NULL },

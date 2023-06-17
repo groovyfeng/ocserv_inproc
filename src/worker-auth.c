@@ -18,31 +18,32 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <config.h>
+#include "config.h"
+
+#include "worker.h"
+#include "common/base64-helper.h"
+#include "common/common.h"
+#include "ipc.pb-c.h"
+#include "html.h"
+#include "tlslib.h"
+#include "vpn.h"
 
 #include <gnutls/gnutls.h>
 #include <gnutls/crypto.h>
 #include <gnutls/x509.h>
+#include <http_parser.h>
+
+#include <fcntl.h>
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
+#endif
+#include <unistd.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+
 #include <errno.h>
-#include <stdlib.h>
-#include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <unistd.h>
-#include <limits.h>
-#include <ipc.pb-c.h>
-#include <base64-helper.h>
-
-#include <vpn.h>
-#include "html.h"
-#include <worker.h>
-#include <common.h>
-#include <tlslib.h>
-
-#include <http_parser.h>
 
 #define VERSION_MSG "<version who=\"sg\">0.1(1)</version>\n"
 

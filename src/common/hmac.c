@@ -19,16 +19,15 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  */
 
-#include <config.h>
-#include <string.h>
+#include "config.h"
+
+#include "common/common.h"
+#include "common/hmac.h"
 
 #include <gnutls/gnutls.h>
 #include <gnutls/crypto.h>
 #include <gnutls/abstract.h>
 #include <nettle/hmac.h>
-#include <common.h>
-#include <hmac.h>
-#include <stdbool.h>
 
 bool hmac_init_key(size_t key_length, uint8_t * key)
 {

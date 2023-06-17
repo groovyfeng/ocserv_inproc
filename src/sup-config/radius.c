@@ -15,26 +15,24 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <config.h>
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-#include <sys/types.h>
-#include <pwd.h>
-#include <grp.h>
-#include <fcntl.h>
-#include <limits.h>
-#include <common.h>
-#include <ip-util.h>
+#include "config.h"
 
 #ifdef HAVE_RADIUS
 
-#include <vpn.h>
-#include <main.h>
-#include <sec-mod-sup-config.h>
-#include <auth/radius.h>
+#include "auth/radius.h"
+#include "common/common.h"
+#include "ip-util.h"
+#include "main.h"
+#include "sec-mod-sup-config.h"
+#include "vpn.h"
+
+#include <fcntl.h>
+#include <grp.h>
+#include <pwd.h>
+#include <unistd.h>
+#include <sys/types.h>
+
+#include <stddef.h>
 
 static int get_sup_config(struct cfg_st *cfg, client_entry_st *entry,
 			  SecmSessionReplyMsg *msg, void *pool)

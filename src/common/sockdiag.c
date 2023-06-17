@@ -17,22 +17,23 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <config.h>
-#include <errno.h>
-#include <stdio.h>
-#include <string.h>
-#include <unistd.h>
+#include "config.h"
 
 #if defined(ENABLE_ADAPTIVE_RATE_LIMIT_SUPPORT)
 
-#include <sys/socket.h>
-#include <sys/un.h>
+#include <unistd.h>
 #include <linux/netlink.h>
 #include <linux/rtnetlink.h>
 #include <linux/sock_diag.h>
 #include <linux/unix_diag.h>
 #include <netinet/tcp.h>
+#include <sys/socket.h>
 #include <sys/syslog.h>
+#include <sys/un.h>
+
+#include <errno.h>
+#include <stddef.h>
+#include <string.h>
 
 static int send_query(int fd, int inode, int states, int show)
 {

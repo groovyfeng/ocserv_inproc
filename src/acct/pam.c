@@ -17,24 +17,25 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <config.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <syslog.h>
-#include <vpn.h>
-#include "pam.h"
-#include <sec-mod-acct.h>
+#include "config.h"
 
 #ifdef HAVE_PAM
 
-#include <security/pam_appl.h>
-#include <sys/types.h>
-#include <pwd.h>
-#include <grp.h>
-#include <pcl.h>
-#include <str.h>
+#include "acct/pam.h"
 #include "auth/pam.h"
+#include "sec-mod-acct.h"
+#include "syslog.h"
+#include "str.h"
+#include "vpn.h"
+
+#include <pcl.h>
+#include <security/pam_appl.h>
+
+#include <sys/types.h>
+#include <grp.h>
+#include <pwd.h>
+
+#include <stddef.h>
 
 static int ocserv_conv(int msg_size, const struct pam_message **msg,
 		struct pam_response **resp, void *uptr)

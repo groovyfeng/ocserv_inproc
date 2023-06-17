@@ -18,35 +18,34 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <config.h>
+#include "config.h"
+
+#include "worker.h"
+#include "tlslib.h"
+#include "vpn.h"
 
 #include <gnutls/gnutls.h>
 #include <gnutls/crypto.h>
 #include <gnutls/x509.h>
-#include <errno.h>
-#include <stdlib.h>
-#include <stdarg.h>
-#include <stdio.h>
-#include <string.h>
-#include <sys/types.h>
-#include <sys/uio.h>
-#include <sys/stat.h>
+
 #include <fcntl.h>
 #include <unistd.h>
-#include <limits.h>
-
+#include <net/if.h>
 #include <sys/ioctl.h>
 #include <sys/socket.h>
-#include <net/if.h>
-
-#include <vpn.h>
-#include <worker.h>
-#include <tlslib.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <sys/uio.h>
 
 #ifdef HAVE_SIGALTSTACK
-# include <signal.h>
 # include <sys/mman.h>
+# include <signal.h>
 #endif
+
+#include <errno.h>
+#include <stdlib.h>
+#include <stdint.h>
+#include <string.h>
 
 /* recv from the new file descriptor and make sure we have a valid packet */
 static unsigned recv_from_new_fd(struct worker_st * ws, struct dtls_st *dtls, int fd, UdpFdMsg **tmsg)

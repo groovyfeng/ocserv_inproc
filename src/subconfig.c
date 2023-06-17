@@ -15,19 +15,20 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <config.h>
+#include "config.h"
 
+#include "common/common.h"
+#include "common-config.h"
+#include "sec-mod-sup-config.h"
+#include "vpn.h"
+
+#include <unistd.h>
+#include <sys/types.h>
+
+#include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
-#include <sys/types.h>
-#include <ctype.h>
-
-#include <sec-mod-sup-config.h>
-#include <common.h>
-#include <vpn.h>
-#include "common-config.h"
 
 static void free_expanded_brackets_string(subcfg_val_st out[MAX_SUBOPTIONS], unsigned size)
 {

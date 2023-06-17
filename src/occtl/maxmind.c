@@ -18,14 +18,16 @@
  *   Nikos Mavrogiannopoulos
  */
 
-#include <config.h>
+#include "config.h"
+
+#include "geoip.h"
+
+#include <netinet/in.h>
 #include <sys/socket.h>
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <netinet/in.h>
-
-#include "geoip.h"
 
 #ifdef HAVE_MAXMIND
 #include <maxminddb.h>

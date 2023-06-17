@@ -17,30 +17,29 @@
 
 #include "config.h"
 
+#include "common/cloexec.h"
+#include "common/system.h"
+#include "ctl.pb-c.h"
+#include "ip-lease.h"
+#include "main.h"
+#include "main-ban.h"
+#include "main-ctl.h"
 #include "occtl/ctl.h"
+#include "str.h"
+#include "vpn.h"
+#include "ccan/container_of/container_of.h"
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include <unistd.h>
-#include <sys/types.h>
-#include <sys/stat.h>
 #include <sys/socket.h>
-#include <signal.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 #include <sys/un.h>
-#include <main.h>
-#include <vpn.h>
-#include <cloexec.h>
-#include <ip-lease.h>
 
 #include <errno.h>
-#include <system.h>
-#include <main-ctl.h>
-#include <main-ban.h>
-#include <ccan/container_of/container_of.h>
-
-#include <ctl.pb-c.h>
-#include <str.h>
+#include <signal.h>
+#include <stddef.h>
+#include <stdint.h>
+#include <string.h>
 
 typedef struct method_ctx {
 	main_server_st *s;

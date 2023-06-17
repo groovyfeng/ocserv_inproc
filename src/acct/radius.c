@@ -17,19 +17,17 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <config.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <syslog.h>
-#include <unistd.h>
-#include <vpn.h>
-#include <ctype.h>
-#include <arpa/inet.h> /* inet_ntop */
-#include "radius.h"
-#include "auth/common.h"
+#include "config.h"
 
 #ifdef HAVE_RADIUS
+
+#include "acct/radius.h"
+#include "auth/radius.h"
+#include "auth/common.h"
+#include "common-config.h"
+#include "sec-mod-acct.h"
+#include "syslog.h"
+#include "vpn.h"
 
 #ifdef LEGACY_RADIUS
 # include <freeradius-client.h>
@@ -37,10 +35,11 @@
 # include <radcli/radcli.h>
 #endif
 
-#include <sec-mod-acct.h>
-#include "auth/radius.h"
-#include "acct/radius.h"
-#include "common-config.h"
+#include <unistd.h>
+#include <arpa/inet.h> /* inet_ntop */
+
+#include <stdio.h>
+#include <stdlib.h>
 
 static void acct_radius_vhost_init(void **_vctx, void *pool, void *additional)
 {

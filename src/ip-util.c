@@ -16,21 +16,23 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <config.h>
-#include "ip-util.h"
-#include <string.h>
-#include <stdio.h>
-#include <talloc.h>
-#include <assert.h>
-#include <stddef.h>
-/* for inet_ntop */
-#include <arpa/inet.h>
-#include <syslog.h>
+#include "config.h"
 
+#include "ip-util.h"
+
+#include <talloc.h>
+
+#include <syslog.h>
+#include <arpa/inet.h> /* for inet_ntop */
 #include <netinet/in.h>
 #include <netinet/ip.h>
-#include <sys/types.h>
 #include <sys/socket.h>
+#include <sys/types.h>
+
+#include <assert.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <string.h>
 
 int ip_cmp(const struct sockaddr_storage *s1, const struct sockaddr_storage *s2)
 {

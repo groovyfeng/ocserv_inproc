@@ -16,36 +16,40 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <config.h>
+#include "config.h"
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-#include <sys/types.h>
-#include <sys/select.h>
-#include <sys/wait.h>
-#include <fcntl.h>
-#include <sys/socket.h>
-#include <netdb.h>
-#include <errno.h>
-#include <sys/ioctl.h>
+#include "gettime.h"
+
+#include "ip-lease.h"
+#include "main.h"
+#include "main-ctl.h"
+#include "script-list.h"
+#include "str.h"
+#include "tlslib.h"
+#include "tun.h"
+#include "vpn.h"
+#include "ccan/list/list.h"
+
 #include <gnutls/gnutls.h>
 #include <gnutls/crypto.h>
-#include <tlslib.h>
+
 #ifdef HAVE_LIBUTIL
 # include <utmpx.h>
 #endif
-#include <gettime.h>
 
-#include <vpn.h>
-#include <str.h>
-#include <tun.h>
-#include <main.h>
-#include <main-ctl.h>
-#include <ip-lease.h>
-#include <script-list.h>
-#include <ccan/list/list.h>
+#include <fcntl.h>
+#include <netdb.h>
+#include <unistd.h>
+#include <sys/ioctl.h>
+#include <sys/select.h>
+#include <sys/socket.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+
+#include <errno.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 #define OCSERV_FW_SCRIPT "/usr/bin/ocserv-fw"
 

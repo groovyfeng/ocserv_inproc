@@ -17,7 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <config.h>
+#include "config.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -26,15 +26,23 @@
 #include <unistd.h>
 #include <gnutls/gnutls.h>
 #include <gnutls/crypto.h>	/* for random */
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <getopt.h>
+
 #ifdef HAVE_CRYPT_H
   /* libcrypt in Fedora28 does not provide prototype
    * in unistd.h */
 # include <crypt.h>
 #endif
+
+#include <getopt.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+
 #include <locale.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 #define DEFAULT_OCPASSWD "/etc/ocserv/ocpasswd"
 

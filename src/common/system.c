@@ -17,21 +17,23 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <config.h>
-#include <system.h>
+#include "config.h"
+
+#include "common/system.h"
+
 #include <unistd.h>
 #ifdef __linux__
 # include <sys/prctl.h>
 #endif
-#include <sys/types.h>
 #include <sys/socket.h>
+#include <sys/syslog.h>
+#include <sys/types.h>
 #include <sys/un.h>
 #include <sys/uio.h>
-#include <sys/syslog.h>
 
-#include <stdlib.h> /* getenv */
 #include <errno.h>
 #include <signal.h>
+#include <stdlib.h> /* getenv */
 #include <string.h>
 
 void kill_on_parent_kill(int sig)

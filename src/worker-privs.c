@@ -17,17 +17,20 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <config.h>
-#include <worker.h>
+#include "config.h"
+
+#include "worker.h"
 
 #ifdef HAVE_LIBSECCOMP
 
-#include <unistd.h>
-#include <sys/syscall.h>
 #include <seccomp.h>
+
+#include <unistd.h>
 #include <sys/ioctl.h>
+#include <sys/syscall.h>
+
 #include <signal.h>
-#include <errno.h>
+#include <stdlib.h>
 
 /* libseccomp 2.4.2 broke accidentally the API. Work around it. */
 #ifndef __SNR_ppoll

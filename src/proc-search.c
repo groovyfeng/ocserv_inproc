@@ -15,13 +15,14 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <config.h>
+#include "config.h"
 
-#include <stdio.h>
+#include "proc-search.h"
+#include "common/common.h"
+#include "main.h"
 
-#include <proc-search.h>
-#include <main.h>
-#include <common.h>
+#include <stddef.h>
+#include <stdint.h>
 
 struct find_ip_st {
 	struct sockaddr_storage *sockaddr;

@@ -13,12 +13,13 @@
  * Lesser General Public License for more details.
  */
 
-#include <config.h>
-#include <stdio.h>
-#include <stdlib.h>
+#include "config.h"
+
+#include "vasprintf.h"
+
 #include <errno.h>
 #include <stdarg.h>
-#include "vasprintf.h"
+#include <stdlib.h>
 
 #ifndef HAVE_VASPRINTF
 

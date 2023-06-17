@@ -29,16 +29,28 @@
 #include "plain.h"
 #include "common-config.h"
 #include "auth/common.h"
-#include <ccan/htable/htable.h>
-#include <ccan/hash/hash.h>
+#include "common-config.h"
+#include "syslog.h"
+#include "vpn.h"
+#include "ccan/htable/htable.h"
+#include "ccan/hash/hash.h"
+
 #ifdef HAVE_LIBOATH
 # include <liboath/oath.h>
 #endif
+
 #ifdef HAVE_CRYPT_H
   /* libcrypt in Fedora28 does not provide prototype
    * in unistd.h */
 # include <crypt.h>
 #endif
+
+#include <unistd.h>
+
+#include <ctype.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 #define MAX_CPASS_SIZE 128
 #define HOTP_WINDOW 20

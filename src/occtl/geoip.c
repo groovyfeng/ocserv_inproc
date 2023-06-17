@@ -17,21 +17,23 @@
  *   Nikos Mavrogiannopoulos <n.mavrogiannopoulos@gmail.com>
  */
 
-#include <config.h>
-#include <ctype.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <sys/socket.h>
-#include <sys/types.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <stdarg.h>
+#include "config.h"
+
+#include "occtl/geoip.h"
 
 #ifdef HAVE_GEOIP
 
 # include <GeoIP.h>
 # include <GeoIPCity.h>
+
+# include <sys/socket.h>
+# include <sys/types.h>
+# include <netinet/in.h>
+# include <arpa/inet.h>
+
+# include <stdio.h>
+# include <string.h>
+
 
 extern void _GeoIP_setup_dbfilename(void);
 # define p_GeoIP_setup_dbfilename _GeoIP_setup_dbfilename

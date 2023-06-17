@@ -16,10 +16,14 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <config.h>
-#include <stdio.h>
-#include <stdint.h>
-#include <errno.h>
+#include "config.h"
+
+#include "common/base64-helper.h"
+#include "common/common.h"
+#include "defs.h"
+
+#include <nettle/sha1.h>
+
 #include <unistd.h>
 #include <fcntl.h>
 #include <string.h>
@@ -29,12 +33,12 @@
 #include <netinet/in.h>
 #include <netinet/ip.h>
 #include <poll.h>
-#include <limits.h>
+
 #include <assert.h>
-#include <nettle/sha1.h>
-#include "common.h"
-#include "defs.h"
-#include "common/base64-helper.h"
+#include <errno.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <string.h>
 
 int saved_argc = 0;
 char **saved_argv = NULL;

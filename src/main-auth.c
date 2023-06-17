@@ -16,34 +16,34 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <config.h>
+#include "config.h"
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-#include <sys/types.h>
-#include <sys/select.h>
-#include <sys/wait.h>
-#include <fcntl.h>
-#include <sys/socket.h>
-#include <netdb.h>
-#include <signal.h>
-#include <errno.h>
-#include <sys/ioctl.h>
+#include "common/common.h"
+#include "ip-lease.h"
+#include "main.h"
+#include "proc-search.h"
+#include "script-list.h"
+#include "str.h"
+#include "tlslib.h"
+#include "tun.h"
+#include "vpn.h"
+#include "ccan/list/list.h"
+
 #include <gnutls/gnutls.h>
 #include <gnutls/crypto.h>
-#include <tlslib.h>
-#include <script-list.h>
-#include <ip-lease.h>
-#include <proc-search.h>
-#include "str.h"
 
-#include <vpn.h>
-#include <tun.h>
-#include <main.h>
-#include <ccan/list/list.h>
-#include <common.h>
+#include <fcntl.h>
+#include <netdb.h>
+#include <unistd.h>
+#include <sys/ioctl.h>
+#include <sys/select.h>
+#include <sys/socket.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+
+#include <errno.h>
+#include <stdio.h>
+#include <string.h>
 
 /* Puts the provided PIN into the config's cgroup */
 void put_into_cgroup(main_server_st * s, const char *_cgroup, pid_t pid)

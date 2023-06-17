@@ -17,10 +17,14 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <config.h>
+#include "config.h"
+
+#include "common/base64-helper.h"
+
 #include <nettle/base64.h>
 #include <talloc.h>
-#include "base64-helper.h"
+
+#include <stdint.h>
 
 void oc_base64_encode (const char *in, size_t inlen,
                        char *out, size_t outlen)

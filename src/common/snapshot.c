@@ -19,23 +19,24 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  */
 
-#include <config.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-#include <sys/types.h>
-#include <fcntl.h>
-#include <limits.h>
-#include <errno.h>
-#include <talloc.h>
-#include <sys/stat.h>
+#include "config.h"
+
+#include "common/snapshot.h"
 #include <common/common.h>
+#include "ccan/htable/htable.h"
+#include "ccan/hash/hash.h"
 
-#include <ccan/htable/htable.h>
-#include <ccan/hash/hash.h>
+#include <talloc.h>
 
-#include <snapshot.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+
+#include <errno.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <string.h>
 
 #define ERRSTR "error: "
 #define WARNSTR "warning: "

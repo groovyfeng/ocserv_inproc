@@ -15,19 +15,22 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <config.h>
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <stddef.h>
-#include <string.h>
-#include <unistd.h>
-#include <syslog.h>
-#include <common.h>
-#include <ctype.h>
-#include <wchar.h>
+#include "config.h"
 
 #include "html.h"
+#include "common/common.h"
+
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
+#endif
+#include <syslog.h>
+#include <unistd.h>
+
+#include <ctype.h>
+#include <stddef.h>
+#include <stdio.h>
+#include <string.h>
+#include <wchar.h>
 
 char *unescape_html(void *pool, const char *html, unsigned len, unsigned *out_len)
 {

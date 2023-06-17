@@ -19,11 +19,17 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <config.h>
+#include "config.h"
+
+#include "occtl/occtl.h"
+
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
+#endif
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <occtl/occtl.h>
 
 typedef struct uid_entries_st {
 	char* user;

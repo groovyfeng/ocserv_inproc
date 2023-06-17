@@ -15,17 +15,18 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <config.h>
+#include "config.h"
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include "sec-mod.h"
+#include "main.h"
+#include "vpn.h"
+#include "ccan/hash/hash.h"
+#include "ccan/htable/htable.h"
+
 #include <unistd.h>
-#include <vpn.h>
-#include <main.h>
-#include <sec-mod.h>
-#include <ccan/hash/hash.h>
-#include <ccan/htable/htable.h>
+
+#include <string.h>
+#include <time.h>
 
 static void send_empty_reply(void *pool, int fd, sec_mod_st *sec)
 {

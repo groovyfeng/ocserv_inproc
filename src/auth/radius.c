@@ -18,19 +18,22 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <config.h>
+#include "config.h"
+
+#include "auth/radius.h"
+#include "auth/common.h"
+#include "str.h"
+#include "syslog.h"
+#include "vpn.h"
+#include "ccan/hash/hash.h"
+
+#include <unistd.h>
+#include <arpa/inet.h> /* inet_ntop */
+
+#include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <syslog.h>
-#include <unistd.h>
-#include <vpn.h>
-#include <ctype.h>
-#include <arpa/inet.h> /* inet_ntop */
-#include "radius.h"
-#include "auth/common.h"
-#include "str.h"
-#include <ccan/hash/hash.h>
 
 #ifdef HAVE_RADIUS
 

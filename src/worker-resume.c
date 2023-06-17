@@ -17,27 +17,23 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <config.h>
+#include "config.h"
+
+#include "worker.h"
+#include "common.h"
+#include "ipc.pb-c.h"
+#include "tlslib.h"
+#include "vpn.h"
 
 #include <gnutls/gnutls.h>
 #include <gnutls/crypto.h>
 #include <gnutls/x509.h>
-#include <errno.h>
-#include <stdlib.h>
-#include <stdarg.h>
-#include <stdio.h>
-#include <string.h>
+
+#include <unistd.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <fcntl.h>
-#include <unistd.h>
-#include <limits.h>
 
-#include <vpn.h>
-#include <worker.h>
-#include "common.h"
-#include "ipc.pb-c.h"
-#include <tlslib.h>
+#include <string.h>
 
 
 static int recv_resume_fetch_reply(worker_st *ws, int sd, gnutls_datum_t *sdata)

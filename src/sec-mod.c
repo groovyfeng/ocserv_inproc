@@ -17,37 +17,40 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <config.h>
+#include "config.h"
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-#include <sys/types.h>
-#include <sys/select.h>
-#include <sys/wait.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <sys/socket.h>
-#include <netdb.h>
-#include <system.h>
-#include <errno.h>
-#include <sys/ioctl.h>
-#include <sys/un.h>
-#include <common.h>
-#include <syslog.h>
-#include <main.h>
-#include <sec-mod.h>
-#include <tlslib.h>
-#include <ipc.pb-c.h>
-#include <sec-mod-sup-config.h>
-#include <sec-mod-resume.h>
-#include <cloexec.h>
-#include <assert.h>
+#include "sec-mod.h"
+#include "common/cloexec.h"
+#include "common/common.h"
+#include "common/system.h"
+#include "ipc.pb-c.h"
+#include "main.h"
+#include "sec-mod-sup-config.h"
+#include "sec-mod-resume.h"
+#include "tlslib.h"
 
 #include <gnutls/gnutls.h>
 #include <gnutls/crypto.h>
 #include <gnutls/abstract.h>
+
+#include <fcntl.h>
+#include <unistd.h>
+#include <netdb.h>
+#include <syslog.h>
+#include <sys/ioctl.h>
+#include <sys/select.h>
+#include <sys/socket.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <sys/un.h>
+#include <sys/wait.h>
+
+#include <assert.h>
+#include <errno.h>
+#include <signal.h>
+#include <stdlib.h>
+#include <string.h>
+#include <time.h>
 
 #define MAINTAINANCE_TIME 310
 

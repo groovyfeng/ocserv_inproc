@@ -19,12 +19,14 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <config.h>
+#include "config.h"
+
+#include "occtl/occtl.h"
+
+#include <unistd.h>
+
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-#include <occtl/occtl.h>
 
 static const char* get_pager(void)
 {

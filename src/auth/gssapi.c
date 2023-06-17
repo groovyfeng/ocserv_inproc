@@ -18,25 +18,28 @@
  */
 
 
-#include <config.h>
+#include "config.h"
 
 #ifdef HAVE_GSSAPI
+
+#include "gssapi.h"
+#include "auth/common.h"
+#include "auth-unix.h"
+#include "syslog.h"
+#include "vpn.h"
+#include "common/base64-helper.h"
+#include "common-config.h"
+
+#include <gssapi/gssapi.h>
+#include <gssapi/gssapi_ext.h>
+#include <gssapi/gssapi_krb5.h>
+
+#include <unistd.h>
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <syslog.h>
-#include <unistd.h>
-#include <vpn.h>
-#include <ctype.h>
-#include "gssapi.h"
-#include "auth/common.h"
-#include "auth-unix.h"
-#include <gssapi/gssapi.h>
-#include <gssapi/gssapi_ext.h>
-#include <gssapi/gssapi_krb5.h>
-#include <base64-helper.h>
-#include "common-config.h"
+#include <time.h>
 
 struct gssapi_vhost_ctx_st {
 	gss_cred_id_t creds;

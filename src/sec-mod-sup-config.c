@@ -15,20 +15,18 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <config.h>
+#include "config.h"
+
+#include "sec-mod-sup-config.h"
+#include "sup-config/file.h"
+#include "sup-config/radius.h"
+#include "vhost.h"
+#include "src/ccan/list/list.h"
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include <vpn.h>
-#include <tun.h>
-#include <main.h>
-#include <common.h>
-#include <vpn.h>
-#include <sec-mod-sup-config.h>
-#include <sup-config/file.h>
-#include <sup-config/radius.h>
 
 void sup_config_init(sec_mod_st *sec)
 {

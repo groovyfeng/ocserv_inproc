@@ -27,9 +27,24 @@
 #include "auth/common.h"
 
 #ifdef SUPPORT_OIDC_AUTH
+
+#include "auth/openidconnect.h"
+#include "auth/common.h"
+#include "auth/plain.h"
+#include "common-config.h"
+#include "syslog.h"
+#include "vpn.h"
+
 #include <curl/curl.h>
 #include <jansson.h>
 #include <cjose/cjose.h>
+
+#include <unistd.h>
+
+#include <ctype.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <time.h>
 
 #define MINIMUM_KEY_REFRESH_INTERVAL (900)

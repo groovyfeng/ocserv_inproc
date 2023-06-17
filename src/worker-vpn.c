@@ -18,51 +18,48 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <config.h>
+#include "config.h"
 
+#include "common/common.h"
+#include "common/system.h"
+#include "gettime.h"
+#include "html.h"
+#include "ipc.pb-c.h"
+#include "tlslib.h"
+#include "vpn.h"
+#include "worker.h"
+#include "worker-bandwidth.h"
+
+#include <ev.h>
 #include <gnutls/gnutls.h>
 #include <gnutls/dtls.h>
 #include <gnutls/crypto.h>
-#include <errno.h>
-#include <stdlib.h>
-#include <stdarg.h>
-#include <stdio.h>
-#include <string.h>
+#include <http_parser.h>
+
+#include <poll.h>
+#include <unistd.h>
+#include <arpa/inet.h>
+#include <netinet/in.h>
+#include <netinet/tcp.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <fcntl.h>
-#include <unistd.h>
-#include <limits.h>
-#include <netinet/in.h>
 #include <sys/socket.h>
-#include <netinet/tcp.h>
-#include <arpa/inet.h>
-#include <system.h>
-#include <time.h>
-#include <gettime.h>
-#include <common.h>
-#include <html.h>
-#include <ctype.h>
-#include <worker-bandwidth.h>
+
+#if defined(CAPTURE_LATENCY_SUPPORT)
+#include "worker-latency.h"
+#include <linux/errqueue.h>
+#include <linux/net_tstamp.h>
+#endif
+
+#include <errno.h>
 #include <signal.h>
-#include <poll.h>
-#include <math.h>
-#include <ev.h>
+#include <stdint.h>
+#include <stdlib.h>
+#include <string.h>
+#include <time.h>
 
 #if defined(__linux__) && !defined(IPV6_PATHMTU)
 # define IPV6_PATHMTU 61
-#endif
-
-#include <vpn.h>
-#include "ipc.pb-c.h"
-#include <worker.h>
-#include <tlslib.h>
-#include <http_parser.h>
-
-#if defined(CAPTURE_LATENCY_SUPPORT)
-#include <linux/net_tstamp.h>
-#include <linux/errqueue.h>
-#include <worker-latency.h>
 #endif
 
 #define MIN_MTU(ws) (((ws)->vinfo.ipv6!=NULL)?1280:800)

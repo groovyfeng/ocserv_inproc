@@ -16,23 +16,24 @@
  */
 
 
-#include <config.h>
+#include "config.h"
 
 #if defined(LINUX_NAMESPACES)
 
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <sys/stat.h>
-#include <limits.h>
-#include <unistd.h>
+#include "namespace.h"
+#include "common-config.h"
+
 #include <fcntl.h>
 #include <sched.h>
-#include <stdio.h>
+#include <unistd.h>
+#include <sys/socket.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+
 #include <errno.h>
+#include <stdio.h>
 #include <string.h>
 
-#include <common-config.h>
-#include <namespace.h>
 
 /* get default namespace file descriptor to be able to place fd in a given
  * namespace

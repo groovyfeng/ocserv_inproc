@@ -17,15 +17,18 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <config.h>
-#include <stdarg.h>
-#include <stdio.h>
-#include "main.h"
+#include "config.h"
 
 #if !defined(HAVE_SETPROCTITLE)
 
 # if defined(__linux__)
+#  include "main.h"
+
 #  include <sys/prctl.h>
+
+#  include <stdarg.h>
+#  include <stdio.h>
+#  include <string.h>
 
 /* This sets the process title as shown in top, but not in ps (*@#%@).
  * To change the ps name in Linux, one needs to do master black magic

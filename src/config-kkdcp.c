@@ -15,18 +15,18 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <config.h>
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include "config.h"
 
 #ifdef HAVE_GSSAPI
 
-#include <ctype.h>
-#include <sys/types.h>
-#include <sys/socket.h>
 #include <netdb.h>
+#include <sys/socket.h>
+#include <sys/types.h>
+
+#include <ctype.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 static char *find_space(char *str)
 {
