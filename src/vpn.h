@@ -253,10 +253,10 @@ struct cfg_st {
 	char *default_select_group;
 
 	char **custom_header;
-	size_t custom_header_size;;
+	size_t custom_header_size;
 
 	char **split_dns;
-	size_t split_dns_size;;
+	size_t split_dns_size;
 
 	/* http headers to include */
 	char **included_http_headers;
