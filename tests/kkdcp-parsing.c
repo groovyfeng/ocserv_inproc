@@ -41,8 +41,8 @@ int main(void)
 	parse_kkdcp_string(p, &socktype, &port, &server, &path, &realm);
 	if (socktype != SOCK_DGRAM || strcmp(port, "88") != 0 || strcmp(path, "/KdcProxy") != 0 ||
 	    strcmp(realm, "KERBEROS.REALM") != 0 || strcmp(server, "127.0.0.1") != 0) {
-	    	fprintf(stderr, "error in %d: '%s' '%s' %u@'%s':'%s'\n", __LINE__, path, realm, socktype, server, port);
-	    	exit(2);
+		fprintf(stderr, "error in %d: '%s' '%s' %u@'%s':'%s'\n", __LINE__, path, realm, socktype, server, port);
+		exit(2);
 	}
 
 	strcpy(p, "/KdcProxy KERBEROS.REALM tcp@[::1]:88");
@@ -50,8 +50,8 @@ int main(void)
 	parse_kkdcp_string(p, &socktype, &port, &server, &path, &realm);
 	if (socktype != SOCK_STREAM || strcmp(port, "88") != 0 || strcmp(path, "/KdcProxy") != 0 ||
 	    strcmp(realm, "KERBEROS.REALM") != 0 || strcmp(server, "::1") != 0) {
-	    	fprintf(stderr, "error in %d: '%s' '%s' %u@'%s':'%s'\n", __LINE__, path, realm, socktype, server, port);
-	    	exit(2);
+		fprintf(stderr, "error in %d: '%s' '%s' %u@'%s':'%s'\n", __LINE__, path, realm, socktype, server, port);
+		exit(2);
 	}
 
 	strcpy(p, "/KdcProxy-xxx	 KERBEROS.REALM		udp@[fc74:cc44:8f86:0252:47d4:54bf:112b:970c]:8899");
@@ -59,8 +59,8 @@ int main(void)
 	parse_kkdcp_string(p, &socktype, &port, &server, &path, &realm);
 	if (socktype != SOCK_DGRAM || strcmp(port, "8899") != 0 || strcmp(path, "/KdcProxy-xxx") != 0 ||
 	    strcmp(realm, "KERBEROS.REALM") != 0 || strcmp(server, "fc74:cc44:8f86:0252:47d4:54bf:112b:970c") != 0) {
-	    	fprintf(stderr, "error in %d: '%s' '%s' %u@'%s':'%s'\n", __LINE__, path, realm, socktype, server, port);
-	    	exit(2);
+		fprintf(stderr, "error in %d: '%s' '%s' %u@'%s':'%s'\n", __LINE__, path, realm, socktype, server, port);
+		exit(2);
 	}
 
 	return 0;
