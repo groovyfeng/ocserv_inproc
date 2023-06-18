@@ -942,9 +942,7 @@ static void term_sig_watcher_cb(struct ev_loop *loop, ev_signal *w, int revents)
 
 	if (server_drain_ms == 0) {
 		terminate_server(s);
-	}
-	else
-	{
+	} else {
 		if (!ev_is_active(&graceful_shutdown_watcher)) {
 			mslog(s, NULL, LOG_INFO, "termination request received; stopping new connections");
 			graceful_shutdown_watcher.repeat = ((ev_tstamp)(server_drain_ms)) / 1000.;
@@ -1389,8 +1387,7 @@ int main(int argc, char** argv)
 	ip_lease_init(&s->ip_leases);
 	proc_table_init(s);
 	main_ban_db_init(s);
-	if (if_address_init(s) == 0)
-	{
+	if (if_address_init(s) == 0) {
 		fprintf(stderr, "failed to initialize local addresses\n");
 		exit(EXIT_FAILURE);
 	}

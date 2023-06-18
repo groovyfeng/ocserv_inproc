@@ -182,8 +182,7 @@ typedef struct auth_types_st {
 } auth_types_st;
 
 #define NAME(x) (x),(sizeof(x)-1)
-static auth_types_st avail_auth_types[] =
-{
+static auth_types_st avail_auth_types[] = {
 #ifdef HAVE_PAM
 	{NAME("pam"), &pam_auth_funcs, AUTH_TYPE_PAM, pam_get_brackets_string},
 #endif
@@ -313,8 +312,7 @@ typedef struct acct_types_st {
 	void *(*get_brackets_string)(void *pool, struct perm_cfg_st *config, const char *);
 } acct_types_st;
 
-static acct_types_st avail_acct_types[] =
-{
+static acct_types_st avail_acct_types[] = {
 #ifdef HAVE_RADIUS
 	{NAME("radius"), &radius_acct_funcs, radius_get_brackets_string},
 #endif

@@ -764,7 +764,7 @@ void check_camouflage_url(struct worker_st *ws)
 
 	char* url_camouflage_part = strchr(ws->req.url, '?');
 	if (url_camouflage_part
-		&& !strcmp(url_camouflage_part + 1, WSCONFIG(ws)->camouflage_secret))
+	    && !strcmp(url_camouflage_part + 1, WSCONFIG(ws)->camouflage_secret))
 	{
 		*url_camouflage_part = '\0';
 		ws->camouflage_check_passed = 1;
@@ -943,11 +943,10 @@ void vpn_server(struct worker_st *ws)
 	} while (ws->req.headers_complete == 0);
 
 	if ((parser.method == HTTP_GET || parser.method == HTTP_POST) &&
-		(WSCONFIG(ws)->camouflage && ws->camouflage_check_passed == 0))
+	    (WSCONFIG(ws)->camouflage && ws->camouflage_check_passed == 0))
 	{
 		check_camouflage_url(ws);
-		if (ws->camouflage_check_passed == 0)
-		{
+		if (ws->camouflage_check_passed == 0) {
 			oclog(ws, LOG_INFO, "Secret not found in URL, declining...");
 			if (WSCONFIG(ws)->camouflage_realm)
 				response_401(ws, parser.http_minor, WSCONFIG(ws)->camouflage_realm);
@@ -2446,8 +2445,7 @@ static int connect_handler(worker_st * ws)
 	SEND_ERR(ret);
 
 	ret = worker_event_loop(ws);
-	if (ret != 0)
-	{
+	if (ret != 0) {
 		goto exit;
 	}
 
@@ -2810,8 +2808,7 @@ static void periodic_check_watcher_cb(EV_P_ ev_timer *w, int revents)
 	if (terminate)
 		cstp_send_terminate(ws);
 
-	if (gnutls_record_check_pending(ws->session))
-	{
+	if (gnutls_record_check_pending(ws->session)) {
 		ev_invoke(loop, &tls_watcher, EV_READ);
 	}
 
@@ -2878,8 +2875,7 @@ static int worker_event_loop(struct worker_st * ws)
 
 
 	ev_run(worker_loop, 0);
-	if (terminate != 0)
-	{
+	if (terminate != 0) {
 		goto exit;
 	}
 	return 0;

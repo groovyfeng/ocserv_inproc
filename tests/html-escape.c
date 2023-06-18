@@ -27,8 +27,7 @@
 #include "../src/html.c"
 #include "../src/common/common.h"
 
-static char *strings[] =
-{
+static char *strings[] = {
 	"hello there",
 	"hi bro\n",
 	"small ascii\x10\x01\x03\x04\x18\x20\x21\x1f end",
@@ -41,8 +40,7 @@ static char *strings[] =
 	"Ahoy matey&#33"
 };
 
-static char *encoded_strings[] =
-{
+static char *encoded_strings[] = {
 	"hello there",
 	"hi bro&#x000a;",
 	"small ascii&#x0010;&#x0001;&#x0003;&#x0004;&#x0018; !&#x001f; end",

@@ -26,15 +26,13 @@
 #include "../src/html.h"
 #include "../src/html.c"
 
-static char *strings[] =
-{
+static char *strings[] = {
 	"Laguna+Beach",
 	"_+-.~%2C",
 	"Laguna%25%2B%40Beach"
 };
 
-static char *decoded_strings[] =
-{
+static char *decoded_strings[] = {
 	"Laguna Beach",
 	"_ -.~,",
 	"Laguna%+@Beach"

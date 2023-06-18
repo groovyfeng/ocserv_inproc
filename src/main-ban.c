@@ -419,8 +419,7 @@ static bool test_local_ipv6(struct sockaddr_in6 * remote, struct sockaddr_in6 * 
 static bool if_address_test_local(main_server_st * s, struct sockaddr_storage *addr)
 {
 	unsigned index;
-	for (index = 0; index < s->if_addresses_count; index ++)
-	{
+	for (index = 0; index < s->if_addresses_count; index ++) {
 		if_address_st * ifa = &s->if_addresses[index];
 		if (ifa->if_addr.sa_family != addr->ss_family)
 			continue;

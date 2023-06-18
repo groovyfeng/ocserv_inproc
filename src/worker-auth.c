@@ -919,8 +919,7 @@ void cookie_authenticate_or_exit(worker_st *ws)
 	ret = auth_cookie(ws, ws->cookie, sizeof(ws->cookie));
 	if (ret < 0) {
 		oclog(ws, LOG_WARNING, "failed cookie authentication attempt");
-		if (WSCONFIG(ws)->camouflage && ws->camouflage_check_passed == 0)
-		{
+		if (WSCONFIG(ws)->camouflage && ws->camouflage_check_passed == 0) {
 			cstp_puts(ws,
 				 "HTTP/1.1 405 Method Not Allowed\r\n\r\n");
 		}
