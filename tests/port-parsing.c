@@ -37,7 +37,8 @@ void fw_port_st__init(FwPortSt *message)
 {
 }
 
-void check_vals(FwPortSt **fw_ports, size_t n_fw_ports) {
+void check_vals(FwPortSt **fw_ports, size_t n_fw_ports)
+{
 	if (n_fw_ports != 7) {
 		fprintf(stderr, "error in %d (detected %d)\n", __LINE__, (int)n_fw_ports);
 		exit(1);
