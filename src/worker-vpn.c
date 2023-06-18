@@ -2544,7 +2544,7 @@ static int parse_data(struct worker_st *ws, uint8_t *buf, size_t buf_size,
 		 * user disconnect. In anyconnect clients it may indicate
 		 * an intention to reconnect (e.g., because network was
 		 * changed). We separate the error codes to ensure we do
-		 * do not interpret the intention incorrectly (see #281). */
+		 * not interpret the intention incorrectly (see #281). */
 		if (plain_size > 0 && plain[0] == 0xb0) {
 			exit_worker_reason(ws, REASON_USER_DISCONNECT);
 		} else {
