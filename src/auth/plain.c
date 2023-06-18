@@ -134,8 +134,7 @@ break_group_list(void *pool, char *text,
 				(*elements)--;
 			}
 		}
-	}
-	while (p != NULL && *elements < MAX_GROUPS);
+	} while (p != NULL && *elements < MAX_GROUPS);
 }
 
 /* Returns 0 if the user is successfully authenticated, and sets the appropriate group name.
