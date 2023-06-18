@@ -36,12 +36,11 @@ oc_strcasestr (const char *s1, const char *s2)
     {
       size_t j;
       for (j = 0; j < s2len; ++j)
-	if (tolower (s1[i + j]) != tolower (s2[j]))
-	  break;
+	     if (tolower (s1[i + j]) != tolower (s2[j]))
+	       break;
       if (j == s2len)
-	return (char *) s1 + i;
+	     return (char *) s1 + i;
     }
 
   return NULL;
 }
-

@@ -46,13 +46,13 @@
 void process_result_from_mmdb_lookup(MMDB_entry_data_s * entry_data, int status,
 				     char **output)
 {
-	if (MMDB_SUCCESS == status) {
+	if (status == MMDB_SUCCESS) {
 		if (entry_data->has_data) {
 			if (entry_data->type == MMDB_DATA_TYPE_UTF8_STRING) {
 				*output =
 				    (char *)calloc(entry_data->data_size + 1,
 						   sizeof(char));
-				if (NULL != *output) {
+				if (*output != NULL) {
 					memcpy(*output, entry_data->utf8_string,
 					       entry_data->data_size);
 				} else {
@@ -78,11 +78,11 @@ char *geo_lookup(const char *ip, char *buf, unsigned buf_size)
 
 	/* Open the system maxmind database with countries */
 	status = pMMDB_open(MAXMINDDB_LOCATION_COUNTRY, MMDB_MODE_MMAP, &mmdb);
-	if (MMDB_SUCCESS == status) {
+	if (status == MMDB_SUCCESS) {
 		/* Lookup IP address in the database */
 		MMDB_lookup_result_s result =
 		    pMMDB_lookup_string(&mmdb, ip, &gai_error, &mmdb_error);
-		if (MMDB_SUCCESS == mmdb_error) {
+		if (mmdb_error == MMDB_SUCCESS) {
 			/* If the lookup was successful and an entry was found */
 			if (result.found_entry) {
 				memset(&entry_data, 0,
@@ -112,11 +112,11 @@ char *geo_lookup(const char *ip, char *buf, unsigned buf_size)
 
 	/* Open the system maxmind database with cities - which actually does not contain names of the cities */
 	status = pMMDB_open(MAXMINDDB_LOCATION_CITY, MMDB_MODE_MMAP, &mmdb);
-	if (MMDB_SUCCESS == status) {
+	if (status == MMDB_SUCCESS) {
 		/* Lookup IP address in the database */
 		MMDB_lookup_result_s result =
 		    pMMDB_lookup_string(&mmdb, ip, &gai_error, &mmdb_error);
-		if (MMDB_SUCCESS == mmdb_error) {
+		if (mmdb_error == MMDB_SUCCESS) {
 			/* If the lookup was successful and an entry was found */
 			if (result.found_entry) {
 				memset(&entry_data, 0,
@@ -128,7 +128,7 @@ char *geo_lookup(const char *ip, char *buf, unsigned buf_size)
 				    pMMDB_get_value(&result.entry, &entry_data,
 						    "location", "latitude",
 						    NULL);
-				if (MMDB_SUCCESS == status) {
+				if (status == MMDB_SUCCESS) {
 					if (entry_data.has_data) {
 						if (entry_data.type ==
 						    MMDB_DATA_TYPE_DOUBLE) {
@@ -143,7 +143,7 @@ char *geo_lookup(const char *ip, char *buf, unsigned buf_size)
 				    pMMDB_get_value(&result.entry, &entry_data,
 						    "location", "longitude",
 						    NULL);
-				if (MMDB_SUCCESS == status) {
+				if (status == MMDB_SUCCESS) {
 					if (entry_data.has_data) {
 						if (entry_data.type ==
 						    MMDB_DATA_TYPE_DOUBLE) {
