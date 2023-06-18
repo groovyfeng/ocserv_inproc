@@ -58,7 +58,7 @@ int response_401(worker_st *ws, unsigned http_ver, char* realm)
 	    cstp_printf(ws, "Content-Length: %u\r\n", (unsigned)(sizeof(HTML_401) - 1)) < 0 ||
 	    cstp_puts  (ws, "Connection: close\r\n\r\n") < 0 ||
 	    cstp_puts  (ws, HTML_401) < 0)
-	    return -1;
+		return -1;
 	return 0;
 }
 
