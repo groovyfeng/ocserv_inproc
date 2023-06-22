@@ -28,9 +28,3 @@
    non-inheritable in the first place.  */
 
 int set_cloexec_flag (int desc, bool value);
-
-/* Duplicates a file handle FD, while marking the copy to be closed
-   prior to exec or spawn.  Returns -1 and sets errno if FD could not
-   be duplicated.  */
-
-int dup_cloexec (int fd);
