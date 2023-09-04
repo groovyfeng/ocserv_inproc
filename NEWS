@@ -1,4 +1,6 @@
 * Version 1.2.2 (unreleased)
+- Always invalidate the session in case of session timeout, so that
+  re-authentication with current coookie is impossible.
 
 
 * Version 1.2.1 (released 2023-08-22)
