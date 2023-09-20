@@ -78,9 +78,21 @@ update_config() {
 		fi
 	fi
 
+	if test "${COVERAGE}" = "1";then
+		#use the current privileged user to get coverage reports
+		unprivileged_username=$(whoami)
+		unprivileged_group=daemon
+	else
+		unprivileged_username=nobody
+		unprivileged_group=daemon
+	fi
+
+
 	cp "${srcdir}/data/${file}" "$file.$$.tmp"
 	sed -i -e 's|@USERNAME@|'${username}'|g' "$file.$$.tmp" \
 	       -e 's|@GROUP@|'${group}'|g' "$file.$$.tmp" \
+	       -e 's|@UNPRIVILEGED_USERNAME@|'${unprivileged_username}'|g' "$file.$$.tmp" \
+	       -e 's|@UNPRIVILEGED_GROUP@|'${unprivileged_group}'|g' "$file.$$.tmp" \
 	       -e 's|@SRCDIR@|'${srcdir}'|g' "$file.$$.tmp" \
 	       -e 's|@ISOLATE_WORKERS@|'${ISOLATE_WORKERS}'|g' "$file.$$.tmp" \
 	       -e 's|@OTP_FILE@|'${OTP_FILE}'|g' "$file.$$.tmp" \

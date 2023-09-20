@@ -249,7 +249,7 @@ Fedora:
   - chmod -R o-w tests/data/raddb
   - git submodule update --init
   - autoreconf -fvi
-  - CFLAGS="-g -O0" ./configure --enable-code-coverage --with-kerberos-tests --enable-oidc-auth
+  - CFLAGS="-g -O0 -std=gnu11" ./configure --enable-code-coverage --with-kerberos-tests --enable-oidc-auth
   - make -j$JOBS
   - make check -j$JOBS COVERAGE=1 VERBOSE=1
   - make local-code-coverage-output
