@@ -486,15 +486,15 @@ pages:
 
 triage:
   stage: preliminaries
-  image: $CI_REGISTRY/$BUILD_IMAGES_PROJECT:$FEDORA_BUILD
+  image: $CI_REGISTRY/$BUILD_IMAGES_PROJECT:$CENTOS8_BUILD
   script:
   - gem install gitlab-triage
   - gitlab-triage --source-id openconnect/ocserv --token "$API_TOKEN"
   tags:
   - shared
   - linux
-  only:
-  - schedules
+#  only:
+#  - schedules
 
 codespell/Fedora:
   stage: preliminaries
