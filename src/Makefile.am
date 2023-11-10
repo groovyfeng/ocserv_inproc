@@ -56,9 +56,10 @@ AUTH_SOURCES=auth/common.c auth/common.h auth/gssapi.c auth/gssapi.h \
 
 ACCT_SOURCES=acct/radius.c acct/radius.h acct/pam.c acct/pam.h
 
-
-sbin_PROGRAMS = ocserv ocserv-worker
-bin_SCRIPTS = ocserv-fw
+WORKER_SOURCES = html.c html.h http-heads.h worker.h worker-auth.c \
+	worker-bandwidth.c worker-bandwidth.h worker-http.c worker-http-handlers.c \
+	worker-kkdcp.c worker-misc.c worker-privs.c worker-proxyproto.c \
+	worker-resume.c worker-vpn.c worker-svc.c
 
 ocserv_SOURCES = $(CORE_SOURCES) $(AUTH_SOURCES) $(ACCT_SOURCES) \
 	main.c main-auth.c main-ban.c main-ban.h main-ctl-unix.c main-proc.c \
@@ -68,16 +69,20 @@ ocserv_SOURCES = $(CORE_SOURCES) $(AUTH_SOURCES) $(ACCT_SOURCES) \
 	sec-mod-resume.c sec-mod-resume.h sec-mod-sup-config.c sec-mod-sup-config.h \
 	common/sockdiag.h common/sockdiag.c namespace.c
 
-ocserv_LDADD = $(CORE_LDADD)
-
+if INPROC_WORKER
+sbin_PROGRAMS = ocserv
+ocserv_SOURCES += $(WORKER_SOURCES) worker-inproc.c
+ocserv_worker_SOURCES =
+ocserv_worker_LDADD =
+else
+sbin_PROGRAMS = ocserv ocserv-worker
 ocserv_worker_CPPFLAGS = $(AM_CPPFLAGS) -DOCSERV_WORKER_PROCESS
-ocserv_worker_SOURCES = $(CORE_SOURCES) \
-	html.c html.h http-heads.h worker.c worker.h worker-auth.c \
-	worker-bandwidth.c worker-bandwidth.h worker-http.c worker-http-handlers.c \
-	worker-kkdcp.c worker-misc.c worker-privs.c worker-proxyproto.c \
-	worker-resume.c worker-vpn.c worker-svc.c
-
+ocserv_worker_SOURCES = $(CORE_SOURCES) $(WORKER_SOURCES) worker.c
 ocserv_worker_LDADD = $(CORE_LDADD)
+endif
+bin_SCRIPTS = ocserv-fw
+
+ocserv_LDADD = $(CORE_LDADD) $(LIBM)
 
 noinst_LIBRARIES = libipc.a
 
@@ -86,7 +91,7 @@ AUTH_SOURCES += auth/openidconnect.c auth/openidconnect.h
 endif
 
 if ENABLE_LATENCY_SUPPORT
-ocserv_worker_SOURCES += worker-latency.c worker-latency.h
+WORKER_SOURCES += worker-latency.c worker-latency.h
 endif
 
 

@@ -180,6 +180,7 @@ typedef struct dtls_st {
 	gnutls_session_t dtls_session;
 	udp_port_state_t udp_state;
 	time_t last_dtls_rehandshake;
+    void* ws;
 } dtls_st;
 
 /* Given a base MTU, this macro provides the DTLS plaintext data we can send;
@@ -187,6 +188,12 @@ typedef struct dtls_st {
 #define DATA_MTU(ws,mtu) (mtu-ws->dtls_crypto_overhead-ws->dtls_proto_overhead)
 
 typedef struct worker_st {
+    ev_io command_watcher;
+    ev_io tls_watcher;
+    ev_io tun_watcher;
+    ev_timer period_check_watcher;
+    int terminate;
+    int terminate_reason;
 	gnutls_session_t session;
 
 	auth_struct_st *selected_auth;
@@ -439,7 +446,7 @@ int send_msg_to_main(worker_st *ws, uint8_t cmd,
 
 int parse_proxy_proto_header(struct worker_st *ws, int fd);
 
-void cookie_authenticate_or_exit(worker_st *ws);
+int cookie_authenticate(worker_st *ws);
 
 int add_owasp_headers(worker_st * ws);
 

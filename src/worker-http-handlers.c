@@ -237,7 +237,11 @@ int get_config_handler(worker_st *ws, unsigned http_ver)
 
 	oclog(ws, LOG_HTTP_DEBUG, "requested config: %s", ws->req.url);
 
-	cookie_authenticate_or_exit(ws);
+	ret = cookie_authenticate(ws);
+    if (ret < 0) {
+		oclog(ws, LOG_ERR, "error with cookie authenticate");
+        return -1;
+    }
 
 	if (ws->user_config->xml_config_file == NULL) {
 		oclog(ws, LOG_INFO, "requested config but no config file is set");

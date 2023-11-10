@@ -66,7 +66,7 @@ void tls_load_prio(struct main_server_st *s, struct vhost_cfg_st *vhost);
 
 size_t tls_get_overhead(gnutls_protocol_t, gnutls_cipher_algorithm_t, gnutls_mac_algorithm_t);
 
-#define GNUTLS_FATAL_ERR DTLS_FATAL_ERR
+#define GNUTLS_FATAL_ERR_CMD DTLS_FATAL_ERR_CMD
 
 #ifdef UNDER_TEST
 # define syslog_open 0
@@ -86,7 +86,6 @@ size_t tls_get_overhead(gnutls_protocol_t, gnutls_cipher_algorithm_t, gnutls_mac
 		CMD; \
 	}}
 
-#define DTLS_FATAL_ERR(err) DTLS_FATAL_ERR_CMD(err, exit(EXIT_FAILURE))
 
 #define CSTP_FATAL_ERR_CMD(ws, err, CMD) { \
 	if (ws->session != NULL) { \

@@ -302,8 +302,10 @@ void header_value_check(struct worker_st *ws, struct http_req_st *req)
 	char *str, *p;
 	const dtls_ciphersuite_st *cand = NULL;
 	const dtls_ciphersuite_st *saved_ciphersuite;
+#ifdef ENABLE_COMPRESSION
 	const compression_method_st *comp_cand = NULL;
 	const compression_method_st **selected_comp;
+#endif
 	int want_cipher;
 	int want_mac;
 

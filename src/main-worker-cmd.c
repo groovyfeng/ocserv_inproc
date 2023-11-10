@@ -473,6 +473,14 @@ int handle_worker_commands(main_server_st * s, struct proc_st *proc)
 		}
 		break;
 #endif
+#ifdef INPROC_WORKER
+    case CMD_NOTIFY_CLIENT_DISCONNECT:{
+            mslog(s, proc, LOG_INFO, "notify client disconnected\n");
+            ret = ERR_WORKER_TERMINATED;
+            goto cleanup;
+        }
+        break;
+#endif /* INPROC_WORKER */
 	default:
 		mslog(s, proc, LOG_ERR, "unknown CMD from worker: 0x%x", (unsigned)cmd);
 		ret = ERR_BAD_COMMAND;

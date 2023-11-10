@@ -896,20 +896,19 @@ int get_cert_info(worker_st * ws)
 /* This makes sure that the provided cookie is valid,
  * and fills in the ws->user_config.
  */
-void cookie_authenticate_or_exit(worker_st *ws)
+int cookie_authenticate(worker_st *ws)
 {
 	int ret;
 
 	if (ws->auth_state == S_AUTH_COMPLETE)
-		return;
+		return 0;
 
 	/* we must be in S_AUTH_COOKIE state */
 	if (ws->auth_state != S_AUTH_COOKIE || ws->cookie_set == 0) {
 		oclog(ws, LOG_WARNING, "no cookie found");
 		cstp_puts(ws,
 			 "HTTP/1.1 503 Service Unavailable\r\n\r\n");
-		cstp_fatal_close(ws, GNUTLS_A_ACCESS_DENIED);
-		exit_worker(ws);
+		goto error;
 	}
 
 	/* we have authenticated against sec-mod, we need to complete
@@ -930,10 +929,13 @@ void cookie_authenticate_or_exit(worker_st *ws)
 			cstp_puts(ws,
 				 "HTTP/1.1 503 Service Unavailable\r\n\r\n");
 		}
-		cstp_fatal_close(ws, GNUTLS_A_ACCESS_DENIED);
-		exit_worker(ws);
-	}
+        goto error;
+    }
 	ws->auth_state = S_AUTH_COMPLETE;
+    return 0;
+error:
+    cstp_fatal_close(ws, GNUTLS_A_ACCESS_DENIED);
+    return -1;
 }
 
 /* sends a cookie authentication request to main thread and waits for
@@ -1755,7 +1757,7 @@ int post_auth_handler(worker_st * ws, unsigned http_ver)
 	if (ret >= 0)
 		cstp_fatal_close(ws, GNUTLS_A_ACCESS_DENIED);
 	talloc_free(msg);
-	exit_worker(ws);
+	exit_worker_reason(ws, REASON_ERROR);
  cleanup:
 	talloc_free(msg);
 	return ret;

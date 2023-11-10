@@ -219,6 +219,12 @@ message latency_stats_delta
 	required uint64 sample_count_delta = 3;
 }
 
+/* WORKER_NOTIFY_CLIENT_DISCONNECT sent from worker to main */
+message notify_client_disconnect_msg
+{
+	
+}
+
 /* Messages to and from the security module */
 
 /*

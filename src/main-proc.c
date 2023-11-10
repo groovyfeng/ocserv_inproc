@@ -60,6 +60,22 @@
 #include <main-ban.h>
 #include <ccan/list/list.h>
 
+#ifdef INPROC_WORKER
+struct proc_st *new_proc_int(main_server_st * s, pid_t pid, int cmd_fd,
+			struct sockaddr_storage *remote_addr, socklen_t remote_addr_len,
+			struct sockaddr_storage *our_addr, socklen_t our_addr_len,
+			uint8_t *sid, size_t sid_size, int worker_mod_instance_index)
+{
+    struct proc_st *proc = new_proc(s, pid, cmd_fd, remote_addr, remote_addr_len, our_addr, our_addr_len, sid, sid_size);
+    if (proc != NULL) {
+        proc->worker_mod_instance_index = worker_mod_instance_index;
+        s->stats.active_clients_per_worker[worker_mod_instance_index]++;
+        mslog(s, proc, LOG_INFO, "Worker %d handling client connection. Worker connections %d\n", worker_mod_instance_index, s->stats.active_clients_per_worker[worker_mod_instance_index]);
+    }
+    return proc;
+}
+#endif // INPROC_WORKER
+
 struct proc_st *new_proc(main_server_st * s, pid_t pid, int cmd_fd,
 			struct sockaddr_storage *remote_addr, socklen_t remote_addr_len,
 			struct sockaddr_storage *our_addr, socklen_t our_addr_len,
@@ -101,19 +117,27 @@ void remove_proc(main_server_st * s, struct proc_st *proc, unsigned flags)
 	pid_t pid;
 
 	ev_io_stop(main_loop, &proc->io);
+#ifndef INPROC_WORKER
 	ev_child_stop(main_loop, &proc->ev_child);
+#endif /* INPROC_WORKER */
 
 	list_del(&proc->list);
 	s->stats.active_clients--;
-
+#ifdef INPROC_WORKER
+    s->stats.active_clients_per_worker[proc->worker_mod_instance_index]--;
+    mslog(s, proc, LOG_INFO, "Worker %d closed client connection. Worker connections %d\n", proc->worker_mod_instance_index, s->stats.active_clients_per_worker[proc->worker_mod_instance_index]);
+#else /* !INPROC_WORKER */
 	if ((flags&RPROC_KILL) && proc->pid != -1 && proc->pid != 0)
 		kill(proc->pid, SIGTERM);
+#endif /* INPROC_WORKER */
 
 	/* close any pending sessions */
 	if (proc->active_sid && !(flags & RPROC_QUIT)) {
 		if (session_close(&(s->sec_mod_instances[proc->sec_mod_instance_index]), proc) < 0) {
 			mslog(s, proc, LOG_ERR, "error closing session (communication with sec-mod issue)");
+#ifndef INPROC_WORKER
 			exit(EXIT_FAILURE);
+#endif
 		}
 	}
 

@@ -91,22 +91,20 @@
 
 struct worker_st *global_ws = NULL;
 
-static int terminate = 0;
-static int terminate_reason = REASON_SERVER_DISCONNECT;
+struct ev_loop *worker_loop = NULL;
 
-static struct ev_loop *worker_loop = NULL;
-ev_io command_watcher;
-ev_io tls_watcher;
-ev_io tun_watcher;
-ev_timer period_check_watcher;
+void add_event_watchers(worker_st *ws);
+void vpn_accept_connection(struct worker_st *ws);
+
 ev_signal term_sig_watcher;
 ev_signal int_sig_watcher;
 ev_signal alarm_sig_watcher;
 
+#ifndef INPROC_WORKER
 static void term_sig_watcher_cb(struct ev_loop *loop, ev_signal *w, int revents);
 
 static int worker_event_loop(struct worker_st * ws);
-
+#endif
 static int parse_cstp_data(struct worker_st *ws, uint8_t * buf, size_t buf_size,
 			   time_t);
 static int parse_dtls_data(struct worker_st *ws, uint8_t * buf, size_t buf_size,
@@ -122,20 +120,29 @@ static int test_for_tcp_health_probe(struct worker_st *ws);
 
 static void dtls_watcher_cb (EV_P_ ev_io * w, int revents);
 
+#ifdef INPROC_WORKER
+ev_signal abort_sig_watcher;
+static void auth_timeout_cb(EV_P_ ev_timer *w, int revents);
+#else
 static void handle_alarm(int signo)
 {
 	if (global_ws)
-		exit_worker_reason(global_ws, terminate_reason);
-
-	_exit(EXIT_FAILURE);
+		exit_worker_reason(global_ws, REASON_SERVER_DISCONNECT);
+    else {
+        syslog(LOG_ERR, "handle_alarm: global_ws is NULL");
+	    _exit(EXIT_FAILURE);
+    }
 }
 
 static void handle_term(int signo)
 {
-       terminate = 1;
-       terminate_reason = REASON_SERVER_DISCONNECT;
-       alarm(2);               /* force exit by SIGALRM */
+    if (global_ws) {
+       global_ws->terminate = 1;
+       global_ws->terminate_reason = REASON_SERVER_DISCONNECT;
+    }
+    alarm(2);               /* force exit by SIGALRM */
 }
+#endif
 
 /* we override that function to force gnutls use poll()
  */
@@ -356,10 +363,15 @@ static int setup_legacy_dtls_keys(gnutls_session_t session, struct worker_st *ws
 static int setup_dtls_connection(struct worker_st *ws, struct dtls_st * dtls)
 {
 	int ret;
-	gnutls_session_t session;
+	gnutls_session_t session = NULL;
 #if defined(CAPTURE_LATENCY_SUPPORT)
 	int ts_socket_opt = SOF_TIMESTAMPING_RX_SOFTWARE | SOF_TIMESTAMPING_SOFTWARE;
 #endif
+
+    if (dtls->dtls_session != NULL) {
+		gnutls_deinit(dtls->dtls_session);
+        dtls->dtls_session = NULL;
+	}
 
 	/* DTLS cookie verified.
 	 * Initialize session.
@@ -427,10 +439,6 @@ static int setup_dtls_connection(struct worker_st *ws, struct dtls_st * dtls)
 	/* reset MTU */
 	link_mtu_set(ws, dtls, ws->adv_link_mtu);
 
-	if (dtls->dtls_session != NULL) {
-		gnutls_deinit(dtls->dtls_session);
-	}
-
 	dtls->dtls_session = session;
 	ev_io_stop(worker_loop, &dtls->io);
 	ev_io_set(&dtls->io, dtls->dtls_tptr.fd, EV_READ);
@@ -487,7 +495,7 @@ void ws_add_score_to_ip(worker_st *ws, unsigned points, unsigned final, unsigned
 
 	if (final ==0 && reply->reply != AUTH__REP__OK) {
 		/* we have exceeded the maximum score */
-		exit(EXIT_FAILURE);
+		exit_worker_reason(ws, REASON_ERROR);
 	}
 
 	ban_ip_reply_msg__free_unpacked(reply, &pa);
@@ -550,6 +558,16 @@ void send_stats_to_secmod(worker_st * ws, time_t now, unsigned discon_reason)
 	}
 }
 
+#ifdef INPROC_WORKER
+static void auth_timeout_cb(EV_P_ ev_timer *w, int revents)
+{
+    ev_timer_stop(worker_loop, w);
+    worker_st *ws = container_of(w, worker_st, period_check_watcher);
+    oclog(ws, LOG_INFO, "auth timeout");
+    exit_worker_reason(ws, REASON_SERVER_DISCONNECT);
+}
+#endif /* INPROC_WORKER */
+
 /* Terminates the worker process, but communicates any required
  * data to main process before (stats/ban points).
  */
@@ -568,9 +586,13 @@ void exit_worker_reason(worker_st * ws, unsigned reason)
 	if (ws->ban_points > 0)
 		ws_add_score_to_ip(ws, 0, 1, reason);
 
+#ifdef INPROC_WORKER
+    talloc_free(ws);
+#else
 	talloc_free(ws->main_pool);
 	closelog();
 	_exit(EXIT_FAILURE);
+#endif
 }
 
 #define HANDSHAKE_SESSION_ID_POS (34)
@@ -605,10 +627,10 @@ void exit_worker_reason(worker_st * ws, unsigned reason)
 		ret = \
 		gnutls_credentials_set(session, GNUTLS_CRD_CERTIFICATE, \
 					WSCREDS(ws)->xcred); \
-		GNUTLS_FATAL_ERR(ret); \
+		GNUTLS_FATAL_ERR_CMD(ret, exit(EXIT_FAILURE)); \
 		gnutls_certificate_server_set_request(session, WSCONFIG(ws)->cert_req); \
 		ret = gnutls_priority_set(session, WSCREDS(ws)->cprio); \
-		GNUTLS_FATAL_ERR(ret); \
+		GNUTLS_FATAL_ERR_CMD(ret, exit(EXIT_FAILURE)); \
 		gnutls_db_set_cache_expiration(session, TLS_SESSION_EXPIRATION_TIME(WSCONFIG(ws))); \
 	} while (0)
 
@@ -790,14 +812,10 @@ static void check_camouflage_url(struct worker_st *ws)
 void vpn_server(struct worker_st *ws)
 {
 	int ret;
-	ssize_t nparsed, nrecvd;
-	gnutls_session_t session = NULL;
-	http_parser parser;
-	http_parser_settings settings;
-	url_handler_fn fn;
-	int requests_left = MAX_HTTP_REQUESTS;
 
 	ocsigaltstack(ws);
+
+#ifndef INPROC_WORKER
 
 	ocsignal(SIGTERM, handle_term);
 	ocsignal(SIGINT, handle_term);
@@ -806,9 +824,17 @@ void vpn_server(struct worker_st *ws)
 
 	global_ws = ws;
 	if (GETCONFIG(ws)->auth_timeout) {
-		terminate_reason = REASON_SERVER_DISCONNECT;
+		ws->terminate_reason = REASON_SERVER_DISCONNECT;
 		alarm(GETCONFIG(ws)->auth_timeout);
 	}
+#else /* INPROC_WORKER */
+	if (GETCONFIG(ws)->auth_timeout) {
+        ev_init (&ws->period_check_watcher, auth_timeout_cb);
+	    ev_timer_set(&ws->period_check_watcher, GETCONFIG(ws)->auth_timeout, 0);
+	    ev_timer_start(worker_loop, &ws->period_check_watcher);
+    }
+#endif /* !INPROC_WORKER */
+
 
 	/* do not allow this process to be traced. That
 	 * prevents worker processes tracing each other. */
@@ -822,6 +848,19 @@ void vpn_server(struct worker_st *ws)
 		}
 	}
 
+    vpn_accept_connection(ws);
+}
+
+void vpn_accept_connection(struct worker_st *ws)
+{
+    int ret;
+    ssize_t nparsed, nrecvd;
+	gnutls_session_t session = NULL;
+	http_parser parser;
+	http_parser_settings settings;
+	url_handler_fn fn;
+	int requests_left = MAX_HTTP_REQUESTS;
+
 	if (ws->remote_addr_len == sizeof(struct sockaddr_in))
 		ws->proto = AF_INET;
 	else
@@ -833,7 +872,7 @@ void vpn_server(struct worker_st *ws)
 		if (ret < 0) {
 			oclog(ws, LOG_ERR,
 			      "could not parse proxy protocol header; discarding connection");
-			exit_worker(ws);
+			goto error;
 		}
 
 		/* update ws->remote_ip_str */
@@ -851,14 +890,15 @@ void vpn_server(struct worker_st *ws)
 		if (test_for_tcp_health_probe(ws) != 0) {
 			oclog(ws, LOG_DEBUG, "Received TCP health probe from load-balancer");
 			exit_worker_reason(ws, REASON_HEALTH_PROBE);
-		}
+            return;
+        }
 
 		/* initialize the session */
 		ret = gnutls_init(&session, GNUTLS_SERVER);
-		GNUTLS_FATAL_ERR(ret);
+		GNUTLS_FATAL_ERR_CMD(ret, goto error);
 
 		ret = gnutls_priority_set(session, WSCREDS(ws)->cprio);
-		GNUTLS_FATAL_ERR(ret);
+		GNUTLS_FATAL_ERR_CMD(ret, goto error);
 		gnutls_session_set_ptr(session, ws);
 
 		/* if we have a single vhost, avoid going through a callback to set credentials. */
@@ -885,7 +925,7 @@ void vpn_server(struct worker_st *ws)
 			ret = gnutls_handshake(session);
 		} while (ret < 0 && gnutls_error_is_fatal(ret) == 0);
 		GNUTLS_ALERT_PRINT(ws, session, ret);
-		GNUTLS_FATAL_ERR(ret);
+		GNUTLS_FATAL_ERR_CMD(ret, goto error);
 
 		oclog(ws, LOG_DEBUG, "TLS handshake completed");
 	} else {
@@ -921,7 +961,7 @@ void vpn_server(struct worker_st *ws)
  restart:
 	if (requests_left-- <= 0) {
 		oclog(ws, LOG_INFO, "maximum number of HTTP requests reached");
-		exit_worker(ws);
+		goto error;
 	}
 
 	http_parser_init(&parser, HTTP_REQUEST);
@@ -936,7 +976,7 @@ void vpn_server(struct worker_st *ws)
 			if (nrecvd != GNUTLS_E_PREMATURE_TERMINATION)
 				oclog(ws, LOG_WARNING,
 				      "error receiving client data");
-			exit_worker(ws);
+			goto error;
 		}
 
 		nparsed =
@@ -944,7 +984,7 @@ void vpn_server(struct worker_st *ws)
 					nrecvd);
 		if (nparsed == 0) {
 			oclog(ws, LOG_INFO, "error parsing HTTP request");
-			exit_worker(ws);
+			goto error;
 		}
 	} while (ws->req.headers_complete == 0);
 
@@ -981,12 +1021,12 @@ void vpn_server(struct worker_st *ws)
 		oclog(ws, LOG_HTTP_DEBUG, "HTTP POST %s", ws->req.url);
 		while (ws->req.message_complete == 0) {
 			nrecvd = cstp_recv(ws, ws->buffer, sizeof(ws->buffer));
-			CSTP_FATAL_ERR(ws, nrecvd);
+			CSTP_FATAL_ERR_CMD(ws, nrecvd, goto error);
 
 			if (nrecvd == 0) {
 				oclog(ws, LOG_HTTP_DEBUG,
 				      "EOF while receiving HTTP POST request");
-				exit_worker(ws);
+				goto error;
 			}
 
 			nparsed =
@@ -995,7 +1035,7 @@ void vpn_server(struct worker_st *ws)
 			if (nparsed == 0) {
 				oclog(ws, LOG_HTTP_DEBUG,
 				      "error parsing HTTP POST request");
-				exit_worker(ws);
+				goto error;
 			}
 		}
 
@@ -1023,11 +1063,17 @@ void vpn_server(struct worker_st *ws)
 		oclog(ws, LOG_HTTP_DEBUG, "unexpected HTTP method %s",
 		      http_method_str(parser.method));
 		response_404(ws, parser.http_minor);
+        goto finish;
 	}
 
+    return;
+ error:
+    exit_worker_reason(ws, REASON_ERROR);
+    return;
  finish:
 	cstp_close(ws);
-}
+    return;
+ }
 
 static
 void data_mtu_send(worker_st * ws, unsigned mtu)
@@ -1286,18 +1332,20 @@ int periodic_check(worker_st * ws, struct timespec *tnow, unsigned dpd)
 	 * freezes in the worker due to an unexpected block (due to worker
 	 * bug or kernel bug). In that case the worker will be killed due
 	 * the alarm instead of hanging. */
-	terminate_reason = REASON_SERVER_DISCONNECT;
+	ws->terminate_reason = REASON_SERVER_DISCONNECT;
+#ifndef INPROC_WORKER
 	alarm(1800);
+#endif
 
 	if (WSCONFIG(ws)->idle_timeout > 0) {
 		if (now - ws->last_nc_msg > WSCONFIG(ws)->idle_timeout) {
 			oclog(ws, LOG_ERR,
 			      "idle timeout reached for process (%d secs)",
 			      (int)(now - ws->last_nc_msg));
-			terminate = 1;
-			terminate_reason = REASON_IDLE_TIMEOUT;
-			goto cleanup;
-		}
+            ws->terminate = 1;
+            ws->terminate_reason = REASON_IDLE_TIMEOUT;
+            goto cleanup;
+        }
 	}
 
 	if (ws->user_config->session_timeout_secs > 0) {
@@ -1305,8 +1353,8 @@ int periodic_check(worker_st * ws, struct timespec *tnow, unsigned dpd)
 			oclog(ws, LOG_NOTICE,
 			      "session timeout reached for process (%d secs)",
 			      (int)(now - ws->session_start_time));
-			terminate = 1;
-			terminate_reason = REASON_SESSION_TIMEOUT;
+            ws->terminate = 1;
+			ws->terminate_reason = REASON_SESSION_TIMEOUT;
 			goto cleanup;
 		}
 	}
@@ -1335,7 +1383,7 @@ int periodic_check(worker_st * ws, struct timespec *tnow, unsigned dpd)
 		ws->buffer[0] = AC_PKT_DPD_OUT;
 
 		ret = dtls_send(DTLS_ACTIVE(ws), ws->buffer, data_mtu+1);
-		DTLS_FATAL_ERR_CMD(ret, exit_worker_reason(ws, REASON_ERROR));
+		DTLS_FATAL_ERR_CMD(ret, ws->terminate_reason = REASON_ERROR; goto cleanup);
 
 		if (now - ws->last_msg_udp > DPD_MAX_TRIES * dpd) {
 			oclog(ws, LOG_ERR,
@@ -1357,12 +1405,13 @@ int periodic_check(worker_st * ws, struct timespec *tnow, unsigned dpd)
 		ws->buffer[7] = 0;
 
 		ret = cstp_send(ws, ws->buffer, 8);
-		CSTP_FATAL_ERR_CMD(ws, ret, exit_worker_reason(ws, REASON_ERROR));
+		CSTP_FATAL_ERR_CMD(ws, ret, ws->terminate_reason = REASON_ERROR; goto cleanup);
 
 		if (now - ws->last_msg_tcp > DPD_MAX_TRIES * dpd) {
 			oclog(ws, LOG_NOTICE,
 			      "connection timeout (DPD); tearing down connection");
-			exit_worker_reason(ws, REASON_DPD_TIMEOUT);
+			ws->terminate_reason = REASON_DPD_TIMEOUT;
+            goto cleanup;
 		}
 	}
 
@@ -1375,11 +1424,13 @@ int periodic_check(worker_st * ws, struct timespec *tnow, unsigned dpd)
 		}
 	}
 
- cleanup:
 	ws->last_periodic_check = now;
 
 	return 0;
-}
+
+ cleanup:
+    return -1;
+ }
 
 /* Disable any TCP queuing on the TLS port. This allows a connection that works over
  * TCP instead of UDP to still be interactive.
@@ -1441,7 +1492,7 @@ static int dtls_mainloop(worker_st * ws, struct dtls_st * dtls, struct timespec 
 		oclog(ws, LOG_TRANSFER_DEBUG,
 		      "received %d byte(s) (DTLS)", ret);
 
-		DTLS_FATAL_ERR_CMD(ret, exit_worker_reason(ws, REASON_ERROR));
+        DTLS_FATAL_ERR_CMD(ret, ws->terminate_reason = REASON_ERROR; goto cleanup);
 
 		if (ret == GNUTLS_E_REHANDSHAKE) {
 
@@ -1451,6 +1502,7 @@ static int dtls_mainloop(worker_st * ws, struct dtls_st * dtls, struct timespec 
 				oclog(ws, LOG_INFO,
 				      "client requested DTLS rehandshake too soon");
 				ret = -1;
+                ws->terminate_reason = REASON_ERROR;
 				goto cleanup;
 			}
 
@@ -1466,7 +1518,7 @@ static int dtls_mainloop(worker_st * ws, struct dtls_st * dtls, struct timespec 
 				 || ret == GNUTLS_E_INTERRUPTED);
 
 			GNUTLS_ALERT_PRINT(ws, dtls->dtls_session, ret);
-			DTLS_FATAL_ERR_CMD(ret, exit_worker_reason(ws, REASON_ERROR));
+			DTLS_FATAL_ERR_CMD(ret, goto cleanup);
 			oclog(ws, LOG_DEBUG, "DTLS rehandshake completed");
 
 			dtls->last_dtls_rehandshake = tnow->tv_sec;
@@ -1565,14 +1617,16 @@ static int tls_mainloop(struct worker_st *ws, struct timespec *tnow)
 	if (ret == GNUTLS_E_PREMATURE_TERMINATION) {
 		oclog(ws, LOG_DEBUG, "client disconnected prematurely");
 		ret = -1;
+        ws->terminate_reason = REASON_USER_DISCONNECT;
 		goto cleanup;
 	}
 
-	CSTP_FATAL_ERR_CMD(ws, ret, exit_worker_reason(ws, REASON_ERROR));
+	CSTP_FATAL_ERR_CMD(ws, ret, goto cleanup);
 
 	if (ret == 0) {		/* disconnect */
 		oclog(ws, LOG_DEBUG, "client disconnected");
 		ret = -1;
+        ws->terminate_reason = REASON_USER_DISCONNECT;
 		goto cleanup;
 	} else if (ret >= 8) {
 		oclog(ws, LOG_TRANSFER_DEBUG, "received %d byte(s) (TLS)", data.size);
@@ -1581,8 +1635,9 @@ static int tls_mainloop(struct worker_st *ws, struct timespec *tnow)
 			ret = parse_cstp_data(ws, data.data, data.size, tnow->tv_sec);
 			if (ret < 0) {
 				oclog(ws, LOG_ERR, "error parsing CSTP data");
-				goto cleanup;
-			}
+                ws->terminate = REASON_ERROR;
+                goto cleanup;
+            }
 
 			if ((ret == AC_PKT_DATA || ret == AC_PKT_COMPRESSED) && DTLS_ACTIVE(ws)->udp_state == UP_ACTIVE) {
 				/* client switched to TLS for some reason */
@@ -1600,8 +1655,9 @@ static int tls_mainloop(struct worker_st *ws, struct timespec *tnow)
 			oclog(ws, LOG_INFO,
 			      "client requested TLS rehandshake too soon");
 			ret = -1;
-			goto cleanup;
-		}
+            ws->terminate_reason = REASON_USER_DISCONNECT;
+            goto cleanup;
+        }
 
 		oclog(ws, LOG_INFO,
 		      "client requested rehandshake on TLS channel");
@@ -1609,7 +1665,7 @@ static int tls_mainloop(struct worker_st *ws, struct timespec *tnow)
 			ret = gnutls_handshake(ws->session);
 		} while (ret < 0 && gnutls_error_is_fatal(ret) == 0);
 		GNUTLS_ALERT_PRINT(ws, ws->session, ret);
-		DTLS_FATAL_ERR_CMD(ret, exit_worker_reason(ws, REASON_ERROR));
+        DTLS_FATAL_ERR_CMD(ret, ws->terminate_reason = REASON_ERROR; goto cleanup);
 
 		ws->last_tls_rehandshake = tnow->tv_sec;
 		oclog(ws, LOG_INFO, "TLS rehandshake completed");
@@ -1723,7 +1779,7 @@ static int tun_mainloop(struct worker_st *ws, struct timespec *tnow)
 
 			dtls_to_send.data[7] = dtls_type;
 			ret = dtls_send(DTLS_ACTIVE(ws), dtls_to_send.data + 7, dtls_to_send.size + 1);
-			DTLS_FATAL_ERR_CMD(ret, exit_worker_reason(ws, REASON_ERROR));
+			DTLS_FATAL_ERR_CMD(ret, goto cleanup);
 
 			if (ret == GNUTLS_E_LARGE_PACKET) {
 				mtu_not_ok(ws, DTLS_ACTIVE(ws));
@@ -1750,7 +1806,7 @@ static int tun_mainloop(struct worker_st *ws, struct timespec *tnow)
 			ws->tun_bytes_out += cstp_to_send.size;
 
 			ret = cstp_send(ws, cstp_to_send.data, cstp_to_send.size + 8);
-			CSTP_FATAL_ERR_CMD(ws, ret, exit_worker_reason(ws, REASON_ERROR));
+			CSTP_FATAL_ERR_CMD(ws, ret, goto cleanup);
 		}
 
 		if (is_data(ws->buffer + 8, l)) /* do not account ICMP */
@@ -1758,6 +1814,9 @@ static int tun_mainloop(struct worker_st *ws, struct timespec *tnow)
 	}
 
 	return 0;
+
+cleanup:
+    return -1;
 }
 
 static
@@ -1878,8 +1937,11 @@ static void calc_mtu_values(worker_st * ws)
 				     gnutls_mac_get(ws->session));
 	}
 
-	/* link MTU is the device MTU */
-	ws->link_mtu = ws->vinfo.mtu;
+	/* link MTU is the device MTU if smaller */
+	oclog(ws, LOG_INFO, "Current link MTU is %u", ws->link_mtu);
+	if (ws->link_mtu <= 0 || ws->vinfo.mtu < ws->link_mtu) {
+		ws->link_mtu = ws->vinfo.mtu;
+	}
 
 	if (DTLS_ACTIVE(ws)->udp_state != UP_DISABLED) {
 		/* crypto overhead for DTLS */
@@ -1945,15 +2007,18 @@ static int connect_handler(worker_st * ws)
 
 	ws->buffer_size = sizeof(ws->buffer);
 
-	cookie_authenticate_or_exit(ws);
-
+	ret = cookie_authenticate(ws);
+    if (ret < 0) {
+		oclog(ws, LOG_ERR, "error with cookie authenticate");
+        goto exit_error;
+    }
 	/* The Clavister Android VPN client has a defect and
 	 * asks for CSCOSSLC/tunnel instead of /CSCOSSLC/tunnel */
 	if (strcmp(req->url, "/CSCOSSLC/tunnel") != 0 && strcmp(req->url, "CSCOSSLC/tunnel") != 0) {
 		oclog(ws, LOG_INFO, "bad connect request: '%s'\n", req->url);
 		response_404(ws, 1);
 		cstp_fatal_close(ws, GNUTLS_A_ACCESS_DENIED);
-		exit_worker(ws);
+		goto exit_error;
 	}
 
 	if (WSCONFIG(ws)->network.name[0] == 0) {
@@ -2471,6 +2536,7 @@ static int connect_handler(worker_st * ws)
 	ret = cstp_uncork(ws);
 	SEND_ERR(ret);
 
+#ifndef INPROC_WORKER
 	ret = worker_event_loop(ws);
 	if (ret != 0)
 	{
@@ -2478,10 +2544,15 @@ static int connect_handler(worker_st * ws)
 	}
 
 	return 0;
+#else
+    /* INPROC_WORKER */
+    add_event_watchers(ws);
+    /* since the event loop is already running return 1 for success */
+	return 1;
+#endif /* !INPROC_WORKER */
 
  exit:
 	cstp_close(ws);
-	/*gnutls_deinit(ws->session); */
 	if (DTLS_ACTIVE(ws)->udp_state == UP_ACTIVE && DTLS_ACTIVE(ws)->dtls_session) {
 		dtls_close(DTLS_ACTIVE(ws));
 	}
@@ -2489,11 +2560,13 @@ static int connect_handler(worker_st * ws)
 		dtls_close(DTLS_INACTIVE(ws));
 	}
 
-	exit_worker_reason(ws, terminate_reason);
+	exit_worker_reason(ws, ws->terminate_reason);
 
  send_error:
 	oclog(ws, LOG_DEBUG, "error sending data\n");
-	exit_worker(ws);
+
+ exit_error:
+	exit_worker_reason(ws, REASON_ERROR);
 
 	return -1;
 }
@@ -2702,6 +2775,7 @@ static int test_for_tcp_health_probe(struct worker_st *ws)
 		return 1;
 }
 
+#ifndef INPROC_WORKER
 static void syserr_cb (const char *msg)
 {
 	struct worker_st * ws = ev_userdata(worker_loop);
@@ -2709,11 +2783,12 @@ static void syserr_cb (const char *msg)
 
 	oclog(ws, LOG_ERR, "libev fatal error: %s / %s", msg, strerror(err));
 
-	terminate_reason = REASON_ERROR;
-	exit_worker_reason(ws, terminate_reason);
+  	ws->terminate_reason = REASON_ERROR;
+	exit_worker_reason(ws, ws->terminate_reason);
 }
+#endif /* !INPROC_WORKER */
 
-static void cstp_send_terminate(struct worker_st * ws)
+void cstp_send_terminate(struct worker_st * ws)
 {
 	ws->buffer[0] = 'S';
 	ws->buffer[1] = 'T';
@@ -2727,21 +2802,20 @@ static void cstp_send_terminate(struct worker_st * ws)
 	oclog(ws, LOG_TRANSFER_DEBUG,
 			"sending disconnect message in TLS channel");
 	cstp_send(ws, ws->buffer, 8);
-	exit_worker_reason(ws, terminate_reason);
+	exit_worker_reason(ws, ws->terminate_reason);
 }
 
 static void command_watcher_cb (EV_P_ ev_io *w, int revents)
 {
-	struct worker_st *ws = ev_userdata(worker_loop);
-
+	struct worker_st *ws = container_of(w, worker_st, command_watcher);
 	int ret = handle_commands_from_main(ws);
 	if (ret == ERR_NO_CMD_FD) {
-		terminate_reason = REASON_ERROR;
+		ws->terminate_reason = REASON_ERROR;
 		cstp_send_terminate(ws);
 	}
 
 	if (ret < 0) {
-		terminate_reason = REASON_ERROR;
+		ws->terminate_reason = REASON_ERROR;
 		cstp_send_terminate(ws);
 	}
 
@@ -2756,14 +2830,14 @@ static void command_watcher_cb (EV_P_ ev_io *w, int revents)
 static void tls_watcher_cb (EV_P_ ev_io * w, int revents)
 {
 	struct timespec tnow;
-	struct worker_st *ws = ev_userdata(loop);
+	struct worker_st *ws = container_of(w, worker_st, tls_watcher);
 	int ret;
 	gettime(&tnow);
 
 	ret = tls_mainloop(ws, &tnow);
 	if (ret < 0) {
 		oclog(ws, LOG_DEBUG, "tls_mainloop failed %d", ret);
-		terminate_reason = REASON_ERROR;
+		ws->terminate_reason = REASON_ERROR;
 		cstp_send_terminate(ws);
 	}
 }
@@ -2771,14 +2845,14 @@ static void tls_watcher_cb (EV_P_ ev_io * w, int revents)
 static void tun_watcher_cb (EV_P_ ev_io * w, int revents)
 {
 	struct timespec tnow;
-	struct worker_st *ws = ev_userdata(loop);
+	struct worker_st *ws = container_of(w, worker_st, tun_watcher);
 	int ret;
 	gettime(&tnow);
 
 	ret = tun_mainloop(ws, &tnow);
 	if (ret < 0) {
 		oclog(ws, LOG_DEBUG, "tun_mainloop failed %d", ret);
-		terminate_reason = REASON_ERROR;
+		ws->terminate_reason = REASON_ERROR;
 		cstp_send_terminate(ws);
 	}
 }
@@ -2786,15 +2860,15 @@ static void tun_watcher_cb (EV_P_ ev_io * w, int revents)
 static void dtls_watcher_cb (EV_P_ ev_io * w, int revents)
 {
 	struct timespec tnow;
-	struct worker_st *ws = ev_userdata(loop);
 	struct dtls_st * dtls = (struct dtls_st*)w;
+	struct worker_st *ws = (worker_st*)dtls->ws;
 	int ret;
 	gettime(&tnow);
 
 	ret = dtls_mainloop(ws, dtls, &tnow);
 	if (ret < 0) {
 		oclog(ws, LOG_DEBUG, "dtls_mainloop failed %d", ret);
-		terminate_reason = REASON_ERROR;
+		ws->terminate_reason = REASON_ERROR;
 		cstp_send_terminate(ws);
 	}
 
@@ -2807,11 +2881,13 @@ static void dtls_watcher_cb (EV_P_ ev_io * w, int revents)
 #endif
 }
 
+#ifndef INPROC_WORKER
 static void term_sig_watcher_cb(struct ev_loop *loop, ev_signal *w, int revents)
 {
 	struct worker_st *ws = ev_userdata(loop);
 	cstp_send_terminate(ws);
 }
+#endif /* !INPROC_WORKER */
 
 static void invoke_dtls_if_needed(struct dtls_st * dtls)
 {
@@ -2824,38 +2900,75 @@ static void invoke_dtls_if_needed(struct dtls_st * dtls)
 
 static void periodic_check_watcher_cb(EV_P_ ev_timer *w, int revents)
 {
-	struct worker_st *ws = ev_userdata(loop);
+    worker_st *ws = container_of(w, worker_st, period_check_watcher);
 	struct timespec tnow;
 
 	gettime(&tnow);
 
 	if (periodic_check(ws, &tnow, ws->user_config->dpd) < 0) {
-		terminate_reason = REASON_ERROR;
 		cstp_send_terminate(ws);
 		return;
 	}
 
-	if (terminate)
+	if (ws->terminate) {
 		cstp_send_terminate(ws);
+        return;
+    }
 
-	if (gnutls_record_check_pending(ws->session))
-	{
-		ev_invoke(loop, &tls_watcher, EV_READ);
+	if (gnutls_record_check_pending(ws->session)) {
+		ev_invoke(loop, &ws->tls_watcher, EV_READ);
 	}
 
 	invoke_dtls_if_needed(DTLS_ACTIVE(ws));
 	invoke_dtls_if_needed(DTLS_INACTIVE(ws));
 }
 
-static int worker_event_loop(struct worker_st * ws)
+void add_event_watchers(worker_st* ws)
 {
 	struct timespec tnow;
 
+    ev_init(&ws->command_watcher, command_watcher_cb);
+	ev_io_set(&ws->command_watcher, ws->cmd_fd, EV_READ);
+	ev_io_start(worker_loop, &ws->command_watcher);
+
+	ev_init(&ws->tls_watcher, tls_watcher_cb);
+	ev_io_set(&ws->tls_watcher, ws->conn_fd, EV_READ);
+	ev_io_start(worker_loop, &ws->tls_watcher);
+
+	ev_init(&DTLS_ACTIVE(ws)->io, dtls_watcher_cb);
+    DTLS_ACTIVE(ws)->ws = ws;
+	ev_init(&DTLS_INACTIVE(ws)->io, dtls_watcher_cb);
+    DTLS_INACTIVE(ws)->ws = ws;
+
+	ev_init(&ws->tun_watcher, tun_watcher_cb);
+	ev_io_set(&ws->tun_watcher, ws->tun_fd, EV_READ);
+	ev_io_start(worker_loop, &ws->tun_watcher);
+
+#ifdef INPROC_WORKER
+    ev_timer_stop(worker_loop, &ws->period_check_watcher);
+#endif
+	ev_init (&ws->period_check_watcher, periodic_check_watcher_cb);
+	ev_timer_set(&ws->period_check_watcher, WORKER_MAINTENANCE_TIME, WORKER_MAINTENANCE_TIME);
+	ev_timer_start(worker_loop, &ws->period_check_watcher);
+
+	/* start dead peer detection */
+	gettime(&tnow);
+	ws->last_msg_tcp = ws->last_msg_udp = ws->last_nc_msg = tnow.tv_sec;
+
+	bandwidth_init(&ws->b_rx, ws->user_config->rx_per_sec);
+	bandwidth_init(&ws->b_tx, ws->user_config->tx_per_sec);
+}
+
+#ifndef INPROC_WORKER
+int worker_event_loop(struct worker_st * ws)
+{
 #if defined(__linux__) && defined(HAVE_LIBSECCOMP)
 	worker_loop = ev_default_loop(EVFLAG_NOENV|EVBACKEND_EPOLL);
 #else
 	worker_loop = EV_DEFAULT;
-#endif
+#endif /* __linux__ && HAVE_LIBSECCOMP */
+
+    add_event_watchers(ws);
 
 	// Restore the signal handlers
 	ocsignal(SIGTERM, SIG_DFL);
@@ -2877,36 +2990,8 @@ static int worker_event_loop(struct worker_st * ws)
 	ev_set_userdata (worker_loop, ws);
 	ev_set_syserr_cb(syserr_cb);
 
-	ev_init(&command_watcher, command_watcher_cb);
-	ev_io_set(&command_watcher, ws->cmd_fd, EV_READ);
-	ev_io_start(worker_loop, &command_watcher);
-
-	ev_init(&tls_watcher, tls_watcher_cb);
-	ev_io_set(&tls_watcher, ws->conn_fd, EV_READ);
-	ev_io_start(worker_loop, &tls_watcher);
-
-	ev_init(&DTLS_ACTIVE(ws)->io, dtls_watcher_cb);
-	ev_init(&DTLS_INACTIVE(ws)->io, dtls_watcher_cb);
-
-	ev_init(&tun_watcher, tun_watcher_cb);
-	ev_io_set(&tun_watcher, ws->tun_fd, EV_READ);
-	ev_io_start(worker_loop, &tun_watcher);
-
-	ev_init (&period_check_watcher, periodic_check_watcher_cb);
-	ev_timer_set(&period_check_watcher, WORKER_MAINTENANCE_TIME, WORKER_MAINTENANCE_TIME);
-	ev_timer_start(worker_loop, &period_check_watcher);
-
-
-	/* start dead peer detection */
-	gettime(&tnow);
-	ws->last_msg_tcp = ws->last_msg_udp = ws->last_nc_msg = tnow.tv_sec;
-
-	bandwidth_init(&ws->b_rx, ws->user_config->rx_per_sec);
-	bandwidth_init(&ws->b_tx, ws->user_config->tx_per_sec);
-
-
 	ev_run(worker_loop, 0);
-	if (terminate != 0)
+	if (ws->terminate != 0)
 	{
 		goto exit;
 	}
@@ -2914,7 +2999,6 @@ static int worker_event_loop(struct worker_st * ws)
 
  exit:
 	cstp_close(ws);
-	/*gnutls_deinit(ws->session); */
 	if (DTLS_ACTIVE(ws)->udp_state == UP_ACTIVE && DTLS_ACTIVE(ws)->dtls_session) {
 		dtls_close(DTLS_ACTIVE(ws));
 	}
@@ -2922,7 +3006,8 @@ static int worker_event_loop(struct worker_st * ws)
 		dtls_close(DTLS_INACTIVE(ws));
 	}
 
-	exit_worker_reason(ws, terminate_reason);
+	exit_worker_reason(ws, ws->terminate_reason);
 
 	return 1;
 }
+#endif /* !INPROC_WORKER */

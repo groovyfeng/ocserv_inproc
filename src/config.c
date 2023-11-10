@@ -318,7 +318,7 @@ static acct_types_st avail_acct_types[] =
 
 static void figure_acct_funcs(void *pool, const char *vhostname, struct perm_cfg_st *config, const char *acct)
 {
-	unsigned i;
+	int i;
 	unsigned found = 0;
 
 	if (acct == NULL)
@@ -1623,6 +1623,7 @@ int cmd_parser (void *pool, int argc, char **argv, struct list_head *head, bool 
 	unsigned test_only = 0;
 	int c;
 	vhost_cfg_st *vhost;
+    optind = 1;
 
 	vhost = vhost_add(pool, head, NULL, 0);
 	assert(vhost != NULL);
@@ -1999,11 +2000,13 @@ const struct auth_mod_st oidc_auth_funcs = {
 
 
 #else
+#ifndef INPROC_WORKER
 int get_cert_names(struct worker_st * ws, const gnutls_datum_t * raw)
 {
 	return -1;
 }
-#endif
+#endif /* INPROC_WORKER */
+#endif /* OCSERV_WORKER_PROCESS */
 
 char secmod_socket_file_name_socket_file[_POSIX_PATH_MAX] = {0};
 

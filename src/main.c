@@ -102,14 +102,20 @@ sec_mod_watcher_st * sec_mod_watchers = NULL;
 ev_timer maintenance_watcher;
 ev_timer graceful_shutdown_watcher;
 ev_signal maintenance_sig_watcher;
-ev_signal term_sig_watcher;
-ev_signal int_sig_watcher;
+static ev_signal term_sig_watcher;
+static ev_signal int_sig_watcher;
 ev_signal reload_sig_watcher;
 #if defined(CAPTURE_LATENCY_SUPPORT)
 ev_timer latency_watcher;
 #endif
+int server_exiting = 0;
 
+#ifndef INPROC_WORKER
 static bool set_env_from_ws(main_server_st * ws);
+#else // INPROC_WORKER
+int send_connection_to_worker(main_server_st *s, int fd, int cmd_fd, sock_type_t socket_type); // send fd by socket
+int create_workers(main_server_st *s);
+#endif
 
 static void add_listener(void *pool, struct listen_list_st *list,
 	int fd, int family, int socktype, int protocol,
@@ -457,7 +463,9 @@ void clear_lists(main_server_st *s)
 		if (ctmp->tun_lease.fd >= 0)
 			close(ctmp->tun_lease.fd);
 		list_del(&ctmp->list);
+#ifndef INPROC_WORKER
 		ev_child_stop(main_loop, &ctmp->ev_child);
+#endif // !INPROC_WORKER
 		ev_io_stop(main_loop, &ctmp->io);
 		safe_memset(ctmp, 0, sizeof(*ctmp));
 		talloc_free(ctmp);
@@ -860,7 +868,7 @@ void script_child_watcher_cb(struct ev_loop *loop, ev_child *w, int revents)
 	}
 }
 
-static void worker_child_watcher_cb(struct ev_loop *loop, ev_child *w, int revents)
+void worker_child_watcher_cb(struct ev_loop *loop, ev_child *w, int revents)
 {
 	main_server_st *s = ev_userdata(loop);
 
@@ -874,6 +882,20 @@ static void worker_child_watcher_cb(struct ev_loop *loop, ev_child *w, int reven
 	}
 
 	ev_child_stop(loop, w);
+#ifdef INPROC_WORKER
+    worker_mod_instance_st *wmi = (worker_mod_instance_st *)w;
+    mslog(s, NULL, LOG_ERR, "worker %d died unexpectedly", wmi->instance);
+    wmi->pid = -1;
+    wmi->is_running = 0;
+    wmi->cmd_socket = -1;
+    if (!server_exiting && WTERMSIG(w->rstatus) != SIGABRT)
+    {
+        // Restart the worker
+        run_worker_proc(s, wmi->instance); 
+        wmi->is_running = 1;
+        mslog(s, NULL, LOG_INFO, "worker %d process restarted", wmi->instance);
+    }
+#endif // INPROC_WORKER
 }
 
 static void kill_children(main_server_st* s)
@@ -890,6 +912,12 @@ static void kill_children(main_server_st* s)
 	for (i = 0; i < s->sec_mod_instance_count; i ++) {
 		kill(s->sec_mod_instances[i].sec_mod_pid, SIGTERM);
 	}
+
+    #ifdef INPROC_WORKER
+    for (i = 0; i < s->worker_mod_instance_count; i ++) {
+        kill(s->worker_mod_instances[i].pid, SIGTERM);
+    }
+    #endif // INPROC_WORKER
 }
 
 static void kill_children_auth_timeout(main_server_st* s)
@@ -940,6 +968,7 @@ static void term_sig_watcher_cb(struct ev_loop *loop, ev_signal *w, int revents)
 	struct listener_st *ltmp = NULL, *lpos;
 	unsigned int server_drain_ms = GETCONFIG(s)->server_drain_ms;
 
+    server_exiting = 1;
 	if (server_drain_ms == 0) {
 		terminate_server(s);
 	}
@@ -983,6 +1012,11 @@ static void reload_sig_watcher_cb(struct ev_loop *loop, ev_signal *w, int revent
 		}
 	}
 	reload_cfg_file(s->config_pool, s->vconfig, 0);
+#ifdef INPROC_WORKER
+    for (i = 0; i < s->worker_mod_instance_count; i ++) {
+        kill(s->worker_mod_instances[i].pid, SIGHUP);
+    }
+#endif /* INPROC_WORKER */
 }
 
 static void cmd_watcher_cb (EV_P_ ev_io *w, int revents)
@@ -1013,6 +1047,44 @@ static void resume_accept_cb (EV_P_ ev_timer *w, int revents)
 	}
 }
 
+void init_worker_st(main_server_st* s, worker_st* ws, int cmd_fd, int sec_mod_instance_index, int fd, int stype)
+{
+	hmac_component_st hmac_components[3];
+
+	/* write sec-mod's address */
+    memcpy(&ws->secmod_addr, &s->sec_mod_instances[sec_mod_instance_index].secmod_addr, s->sec_mod_instances[sec_mod_instance_index].secmod_addr_len);
+    ws->secmod_addr_len = s->sec_mod_instances[sec_mod_instance_index].secmod_addr_len;
+    mslog(s, NULL, LOG_DEBUG, "secmod_addr_path: %s", ws->secmod_addr.sun_path);
+    ws->main_pool = s->main_pool;
+    ws->vconfig = s->vconfig;
+    ws->terminate = 0;
+    ws->cmd_fd = cmd_fd;
+    ws->tun_fd = -1;
+    DTLS_ACTIVE(ws)->dtls_tptr.fd = -1;
+	DTLS_INACTIVE(ws)->dtls_tptr.fd = -1;
+    set_cloexec_flag(fd, false);
+    ws->conn_fd = fd;
+    ws->conn_type = stype;
+    ws->session_start_time = time(NULL);
+
+    human_addr2((const struct sockaddr *)&ws->remote_addr, ws->remote_addr_len, ws->remote_ip_str, sizeof(ws->remote_ip_str), 0);
+    human_addr2((const struct sockaddr *)&ws->our_addr, ws->our_addr_len, ws->our_ip_str, sizeof(ws->our_ip_str), 0);
+
+    hmac_components[0].data = ws->remote_ip_str;
+    hmac_components[0].length = strlen(ws->remote_ip_str);
+    hmac_components[1].data = ws->our_ip_str;
+    hmac_components[1].length = strlen(ws->our_ip_str);
+    hmac_components[2].data = &ws->session_start_time;
+    hmac_components[2].length = sizeof(ws->session_start_time);
+
+    generate_hmac(sizeof(s->hmac_key), s->hmac_key, ARRAY_SIZE(hmac_components), hmac_components, (uint8_t*) ws->sec_auth_init_hmac);
+    
+    // Clear the HMAC key
+#ifndef INPROC_WORKER
+    safe_memset((uint8_t*)s->hmac_key, 0, sizeof(s->hmac_key));
+#endif // !INPROC_WORKER
+}
+
 static void listen_watcher_cb (EV_P_ ev_io *w, int revents)
 {
 	main_server_st *s = ev_userdata(loop);
@@ -1021,10 +1093,11 @@ static void listen_watcher_cb (EV_P_ ev_io *w, int revents)
 	struct worker_st *ws = s->ws;
 	int fd, ret;
 	int cmd_fd[2];
+#ifndef INPROC_WORKER
 	pid_t pid;
 	int i;
-	hmac_component_st hmac_components[3];
 	char worker_path[_POSIX_PATH_MAX];
+#endif // !INPROC_WORKER
 
 	if (ltmp->sock_type == SOCK_TYPE_TCP || ltmp->sock_type == SOCK_TYPE_UNIX) {
 		/* connection on TCP port */
@@ -1074,8 +1147,28 @@ static void listen_watcher_cb (EV_P_ ev_io *w, int revents)
 			close(fd);
 			return;
 		}
-
-		pid = fork();
+#ifdef INPROC_WORKER
+        init_worker_st(s, ws, cmd_fd[1], 0, fd, stype);
+        int worker_index = send_connection_to_worker(s, fd, cmd_fd[1], ws->conn_type);
+        if (worker_index < 0) {
+            mslog(s, NULL, LOG_ERR, "No worker available");
+            goto worker_failed;
+        }
+        ctmp = new_proc_int(s, 0, cmd_fd[0], 
+                &ws->remote_addr, ws->remote_addr_len,
+                &ws->our_addr, ws->our_addr_len,
+                ws->sid, sizeof(ws->sid), worker_index);
+        if (ctmp == NULL) {
+			mslog(s, NULL, LOG_ERR, "New Connection setup failed");
+			close(cmd_fd[0]);
+            goto worker_failed;
+        }
+        ctmp->worker_mod_instance_index = worker_index;
+		ev_io_init(&ctmp->io, cmd_watcher_cb, cmd_fd[0], EV_READ);
+		ev_io_start(loop, &ctmp->io);
+worker_failed:
+#else // !INPROC_WORKER
+        pid = fork();
 		if (pid == 0) {	/* child */
 			unsigned int sec_mod_instance_index;
 			/* close any open descriptors, and erase
@@ -1102,36 +1195,7 @@ static void listen_watcher_cb (EV_P_ ev_io *w, int revents)
 				SA_IN_P_GENERIC(&ws->remote_addr, ws->remote_addr_len),
 				SA_IN_SIZE(ws->remote_addr_len), 0) % s->sec_mod_instance_count;
 
-			/* write sec-mod's address */
-			memcpy(&ws->secmod_addr, &s->sec_mod_instances[sec_mod_instance_index].secmod_addr, s->sec_mod_instances[sec_mod_instance_index].secmod_addr_len);
-			ws->secmod_addr_len = s->sec_mod_instances[sec_mod_instance_index].secmod_addr_len;
-
-
-			ws->main_pool = s->main_pool;
-
-			ws->vconfig = s->vconfig;
-
-			ws->cmd_fd = cmd_fd[1];
-			ws->tun_fd = -1;
-			set_cloexec_flag(fd, false);
-			ws->conn_fd = fd;
-			ws->conn_type = stype;
-			ws->session_start_time = time(NULL);
-
-			human_addr2((const struct sockaddr *)&ws->remote_addr, ws->remote_addr_len, ws->remote_ip_str, sizeof(ws->remote_ip_str), 0);
-			human_addr2((const struct sockaddr *)&ws->our_addr, ws->our_addr_len, ws->our_ip_str, sizeof(ws->our_ip_str), 0);
-
-			hmac_components[0].data = ws->remote_ip_str;
-			hmac_components[0].length = strlen(ws->remote_ip_str);
-			hmac_components[1].data = ws->our_ip_str;
-			hmac_components[1].length = strlen(ws->our_ip_str);
-			hmac_components[2].data = &ws->session_start_time;
-			hmac_components[2].length = sizeof(ws->session_start_time);
-
-			generate_hmac(sizeof(s->hmac_key), s->hmac_key, ARRAY_SIZE(hmac_components), hmac_components, (uint8_t*) ws->sec_auth_init_hmac);
-
-			// Clear the HMAC key
-			safe_memset((uint8_t*)s->hmac_key, 0, sizeof(s->hmac_key));
+            init_worker_st(s, ws, cmd_fd[1], sec_mod_instance_index, fd, stype);
 
 			if (!set_env_from_ws(s))
 				exit(EXIT_FAILURE);
@@ -1184,6 +1248,7 @@ fork_failed:
 			ev_child_init(&ctmp->ev_child, worker_child_watcher_cb, pid, 0);
 			ev_child_start(loop, &ctmp->ev_child);
 		}
+#endif // !INPROC_WORKER
 		close(cmd_fd[1]);
 		close(fd);
 	} else if (ltmp->sock_type == SOCK_TYPE_UDP) {
@@ -1535,6 +1600,12 @@ int main(int argc, char** argv)
 		exit(EXIT_FAILURE);
 	}
 
+#ifdef INPROC_WORKER
+    s->worker_mod_instance_count = s->sec_mod_instance_count > MAX_WORKER_PROCESSES ? MAX_WORKER_PROCESSES : s->sec_mod_instance_count; 
+    s->worker_mod_instances = talloc_zero_array(worker_pool, worker_mod_instance_st, s->worker_mod_instance_count);
+    create_workers(s);
+#endif
+
 #ifdef HAVE_GSSAPI
 	/* Initialize kkdcp structures */
 	ret = asn1_array2tree(kkdcp_asn1_tab, &_kkdcp_pkix1_asn, NULL);
@@ -1635,6 +1706,7 @@ int main(int argc, char** argv)
 	return 0;
 }
 
+#ifndef INPROC_WORKER
 extern char ** pam_auth_group_list;
 extern char ** gssapi_auth_group_list;
 extern char ** plain_auth_group_list;
@@ -1750,3 +1822,4 @@ cleanup:
 
 	return ret;
 }
+#endif // !INPROC_WORKER

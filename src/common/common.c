@@ -125,6 +125,8 @@ const char *cmd_request_to_str(unsigned _cmd)
 		return "ban IP reply";
 	case CMD_LATENCY_STATS_DELTA:
 		return "latency stats delta";
+	case CMD_NOTIFY_CLIENT_DISCONNECT:
+		return "notify client disconnect";
 	case CMD_SEC_CLI_STATS:
 		return "sm: worker cli stats";
 	case CMD_SEC_AUTH_INIT:

@@ -60,6 +60,20 @@ int cmd_parser (void *pool, int argc, char **argv, struct list_head *head, bool 
 #define LATENCY_AGGREGATION_TIME (60)
 #endif
 
+#ifdef INPROC_WORKER
+#define MAX_WORKER_PROCESSES 16
+typedef struct xfer_connection_msg
+{
+    int id;
+    int fd_count;
+    sock_type_t socket_type;
+    int remote_addr_len;
+    struct sockaddr_storage remote_addr;
+} xfer_connection_msg;
+
+#define xfer_conn_id 54321
+#endif /* INPROC_WORKER */
+
 #define MINIMUM_USERS_PER_SEC_MOD 500
 
 struct listener_st {
@@ -95,8 +109,10 @@ struct script_wait_st {
 typedef struct proc_st {
 	/* This is first so this structure can behave as an ev_io */
 	struct ev_io io;
-	struct ev_child ev_child;
 
+#ifndef INPROC_WORKER
+	struct ev_child ev_child;
+#endif
 	struct list_node list;
 	int fd; /* the command file descriptor */
 	pid_t pid;
@@ -154,6 +170,9 @@ typedef struct proc_st {
 	char dtls_compr[8];
 	unsigned mtu;
 	unsigned int sec_mod_instance_index;
+#ifdef INPROC_WORKER
+    unsigned int worker_mod_instance_index;
+#endif // INPROC_WORKER
 
 	/* if the session is initiated by a cookie the following two are set
 	 * and are considered when generating an IP address. That is used to
@@ -181,8 +200,11 @@ typedef struct proc_st {
 
 inline static void kill_proc(proc_st *proc)
 {
-	kill(proc->pid, SIGTERM);
-	proc->pid_killed = 1;
+    if (proc->pid > 0){
+	    kill(proc->pid, SIGTERM);
+        proc->pid = -1;
+        proc->pid_killed = 1;
+    }
 }
 
 struct ip_lease_db_st {
@@ -240,6 +262,9 @@ struct main_stats_st {
 	struct latency_stats_st current_latency_stats;
 	struct latency_stats_st delta_latency_stats;
 #endif
+#ifdef INPROC_WORKER
+    unsigned active_clients_per_worker[MAX_WORKER_PROCESSES]    ;
+#endif
 };
 
 typedef struct sec_mod_instance_st {
@@ -267,6 +292,18 @@ typedef struct if_address_st {
 	struct sockaddr if_netmask;
 } if_address_st;
 
+#ifdef INPROC_WORKER
+typedef struct worker_mod_instance_st {
+	/* This is first so this structure can behave as an ev_io */
+	// struct ev_io io;
+	struct ev_child ev_child;
+    bool is_running;
+    int pid;
+    int instance;
+    int cmd_socket;
+} worker_mod_instance_st;
+#endif
+
 typedef struct main_server_st {
 	/* virtual hosts are only being added to that list, never removed */
 	struct list_head *vconfig;
@@ -287,6 +324,10 @@ typedef struct main_server_st {
 
 	/* This one is on worker pool */
 	struct worker_st *ws;
+#ifdef INPROC_WORKER
+    unsigned int worker_mod_instance_count;
+    worker_mod_instance_st *worker_mod_instances;
+#endif
 
 	unsigned int sec_mod_instance_count;
 	sec_mod_instance_st * sec_mod_instances;
@@ -311,6 +352,10 @@ typedef struct main_server_st {
 	struct if_address_st * if_addresses;
 	unsigned int if_addresses_count;
 } main_server_st;
+
+void init_worker_st(main_server_st *s, struct worker_st *ws, int cmd_fd, int sec_mod_instance_index, int fd, int stype);
+void worker_child_watcher_cb(struct ev_loop *loop, ev_child *w, int revents);
+int run_worker_proc(main_server_st *s, int index);
 
 void clear_lists(main_server_st *s);
 
@@ -371,6 +416,13 @@ struct proc_st *new_proc(main_server_st * s, pid_t pid, int cmd_fd,
 			struct sockaddr_storage *remote_addr, socklen_t remote_addr_len,
 			struct sockaddr_storage *our_addr, socklen_t our_addr_len,
 			uint8_t *sid, size_t sid_size);
+
+#ifdef INPROC_WORKER
+struct proc_st *new_proc_int(main_server_st * s, pid_t pid, int cmd_fd,
+			struct sockaddr_storage *remote_addr, socklen_t remote_addr_len,
+			struct sockaddr_storage *our_addr, socklen_t our_addr_len,
+			uint8_t *sid, size_t sid_size, int worker_mod_instance_index);
+#endif // INPROC_WORKER
 
 /* kill the pid */
 #define RPROC_KILL 1

@@ -102,6 +102,11 @@ static const ctl_method_st methods[] = {
 	{NULL, 0, NULL}
 };
 
+static unsigned get_id_from_proc_st(proc_st *p)
+{
+    return p->pid == 0 ? p->fd : p->pid;
+}
+
 void ctl_handler_deinit(main_server_st * s)
 {
 	if (GETCONFIG(s)->use_occtl == 0)
@@ -312,8 +317,8 @@ static int append_user_info(method_ctx *ctx,
 
 	user_info_rep__init(rep);
 
-	/* ID: pid */
-	rep->id = ctmp->pid;
+	/* ID: pid/fd */
+	rep->id = get_id_from_proc_st(ctmp);
 	rep->username = ctmp->username;
 	rep->groupname = ctmp->groupname;
 	rep->vhost = VHOSTNAME(ctmp->vhost);
@@ -660,7 +665,7 @@ static void single_info_common(method_ctx *ctx, int cfd, uint8_t * msg,
 
 	list_for_each(&ctx->s->proc_list.head, ctmp, list) {
 		if (user == NULL) {	/* id */
-			if (id == 0 || id == -1 || id != ctmp->pid) {
+			if (id == 0 || id == -1 || id != get_id_from_proc_st(ctmp)) {
 				continue;
 			}
 		} else {	/* username */
@@ -819,7 +824,7 @@ static void method_disconnect_user_id(method_ctx *ctx, int cfd,
 
 	/* got the ID. Try to disconnect */
 	list_for_each_safe(&ctx->s->proc_list.head, ctmp, cpos, list) {
-		if (ctmp->pid == req->id) {
+		if (get_id_from_proc_st(ctmp) == req->id) {
 			disconnect_proc(ctx->s, ctmp);
 			rep.status = 1;
 

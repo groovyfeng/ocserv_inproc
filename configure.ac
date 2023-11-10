@@ -574,6 +574,18 @@ fi
 
 AM_CONDITIONAL(ENABLE_LATENCY_SUPPORT,  test "x$have_latency_stats" = xyes)
 
+AC_ARG_ENABLE([inproc-worker], 
+  [AS_HELP_STRING([--enable-inproc-worker], [compile and run client connection in a shared worker (default is no)])],
+  [enable_INPROC_WORKER=yes],
+  [enable_INPROC_WORKER=no]
+)
+
+if test "x$enable_INPROC_WORKER" = xyes; then
+  AC_DEFINE([INPROC_WORKER], [1], [Run client connections in shared worker process])
+fi
+AM_CONDITIONAL(INPROC_WORKER, test "x$enable_INPROC_WORKER" = xyes)
+
+
 AC_CHECK_HEADERS([linux/netlink.h linux/rtnetlink.h linux/sock_diag.h linux/unix_diag.h], [sockdiag_header=yes], [sockdiag_header=no])
 
 if test "x$sockdiag_header" = xyes; then

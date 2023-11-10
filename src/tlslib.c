@@ -140,7 +140,7 @@ ssize_t cstp_send_file(worker_st *ws, const char *file)
 		}
 
 		ret = cstp_send(ws, buf, len);
-		CSTP_FATAL_ERR(ws, ret);
+		CSTP_FATAL_ERR_CMD(ws, ret, return ret);
 
 		total += ret;
 	}
@@ -322,8 +322,11 @@ void cstp_close(worker_st *ws)
 	if (ws->session) {
 		gnutls_bye(ws->session, GNUTLS_SHUT_WR);
 		gnutls_deinit(ws->session);
-	} else {
+		ws->session = NULL;
+	}
+	if (ws->conn_fd != -1) {
 		close(ws->conn_fd);
+		ws->conn_fd = -1;
 	}
 }
 
@@ -333,8 +336,10 @@ void cstp_fatal_close(worker_st *ws,
 	if (ws->session) {
 		gnutls_alert_send(ws->session, GNUTLS_AL_FATAL, a);
 		gnutls_deinit(ws->session);
+		ws->session = NULL;
 	} else {
 		close(ws->conn_fd);
+		ws->conn_fd = -1;
 	}
 }
 
@@ -390,8 +395,15 @@ ssize_t dtls_send(struct dtls_st *dtls, const void *data,
 
 void dtls_close(struct dtls_st *dtls)
 {
-	gnutls_bye(dtls->dtls_session, GNUTLS_SHUT_WR);
-	gnutls_deinit(dtls->dtls_session);
+	if (dtls->dtls_session) {
+		gnutls_bye(dtls->dtls_session, GNUTLS_SHUT_WR);
+		gnutls_deinit(dtls->dtls_session);
+		dtls->dtls_session = NULL;
+	}
+	if (dtls->dtls_tptr.fd != -1) {
+		close(dtls->dtls_tptr.fd);
+		dtls->dtls_tptr.fd = -1;
+	}
 }
 
 static size_t rehash(const void *_e, void *unused)
@@ -405,10 +417,14 @@ void tls_cache_init(void *pool, tls_sess_db_st* db)
 {
 	db->ht = talloc(pool, struct htable);
 	if (db->ht == NULL)
-		exit(EXIT_FAILURE);
+		goto error;
 
 	htable_init(db->ht, rehash, NULL);
 	db->entries = 0;
+	return;
+error:
+	syslog(LOG_ERR, "error: aborting execution %s", __func__);
+	abort();
 }
 
 void tls_cache_deinit(tls_sess_db_st* db)
@@ -550,7 +566,11 @@ void tls_vhost_init(struct vhost_cfg_st *vhost)
 	int ret;
 
 	ret = gnutls_psk_allocate_server_credentials(&vhost->creds.pskcred);
-	GNUTLS_FATAL_ERR(ret);
+	GNUTLS_FATAL_ERR_CMD(ret, goto error);
+    return;
+error:
+    syslog(LOG_ERR, "error: aborting execution %s", __func__);
+    abort();
 }
 
 void tls_vhost_deinit(struct vhost_cfg_st *vhost)
@@ -588,10 +608,10 @@ static void certificate_check(main_server_st *s, const char *vhostname, gnutls_p
 	(void)cert_name;
 
 	ret = gnutls_x509_crt_init(&crt);
-	GNUTLS_FATAL_ERR(ret);
+	GNUTLS_FATAL_ERR_CMD(ret, goto error);
 
 	ret = gnutls_x509_crt_import(crt, &pcert->cert, GNUTLS_X509_FMT_DER);
-	GNUTLS_FATAL_ERR(ret);
+	GNUTLS_FATAL_ERR_CMD(ret, goto error);
 
 	ret = gnutls_x509_crt_get_pk_algorithm(crt, NULL);
 	if (ret != GNUTLS_PK_RSA)
@@ -638,6 +658,11 @@ cleanup:
 		gnutls_x509_crt_deinit(crt);
 	gnutls_free(data.data);
 	gnutls_free(dn.data);
+	return;
+
+error:
+    syslog(LOG_ERR, "error: aborting execution %s", __func__);
+    abort();
 }
 
 static void set_dh_params(main_server_st* s, struct vhost_cfg_st *vhost)
@@ -647,13 +672,13 @@ static void set_dh_params(main_server_st* s, struct vhost_cfg_st *vhost)
 
 	if (vhost->perm_config.dh_params_file != NULL) {
 		ret = gnutls_dh_params_init (&vhost->creds.dh_params);
-		GNUTLS_FATAL_ERR(ret);
+		GNUTLS_FATAL_ERR_CMD(ret, goto error);
 
 		ret = gnutls_load_file(vhost->perm_config.dh_params_file, &data);
-		GNUTLS_FATAL_ERR(ret);
+		GNUTLS_FATAL_ERR_CMD(ret, goto error);
 
 		ret = gnutls_dh_params_import_pkcs3(vhost->creds.dh_params, &data, GNUTLS_X509_FMT_PEM);
-		GNUTLS_FATAL_ERR(ret);
+		GNUTLS_FATAL_ERR_CMD(ret, goto error);
 
 		gnutls_free(data.data);
 
@@ -664,6 +689,10 @@ static void set_dh_params(main_server_st* s, struct vhost_cfg_st *vhost)
 		gnutls_certificate_set_known_dh_params(vhost->creds.xcred, GNUTLS_SEC_PARAM_MEDIUM);
 #endif
 	}
+    return;
+error:
+    syslog(LOG_ERR, "error: aborting execution %s", __func__);
+    abort();
 }
 
 struct key_cb_data {
@@ -849,7 +878,7 @@ int load_cert_files(main_server_st *s, struct vhost_cfg_st *vhost)
 
 			ret = gnutls_pcert_list_import_x509_raw(pcert_list, &pcert_list_size,
 								&data, GNUTLS_X509_FMT_PEM, flags);
-			GNUTLS_FATAL_ERR(ret);
+			GNUTLS_FATAL_ERR_CMD(ret, goto error);
 
 			gnutls_free(data.data);
 		}
@@ -858,7 +887,7 @@ int load_cert_files(main_server_st *s, struct vhost_cfg_st *vhost)
 		certificate_check(s, vhost->name, &pcert_list[0]);
 
 		ret = gnutls_privkey_init(&key);
-		GNUTLS_FATAL_ERR(ret);
+		GNUTLS_FATAL_ERR_CMD(ret, goto error);
 
 		/* use the vhost/config pool rather than main, to allow usage of the credentials
 		 * after freeing s.
@@ -891,14 +920,17 @@ int load_cert_files(main_server_st *s, struct vhost_cfg_st *vhost)
 			cdata, key_cb_sign_func, key_cb_decrypt_func,
 			key_cb_deinit_func, GNUTLS_PRIVKEY_IMPORT_AUTO_RELEASE);
 #endif
-		GNUTLS_FATAL_ERR(ret);
+		GNUTLS_FATAL_ERR_CMD(ret, goto error);
 
 		ret = gnutls_certificate_set_key(vhost->creds.xcred, NULL, 0, pcert_list,
 				pcert_list_size, key);
-		GNUTLS_FATAL_ERR(ret);
+		GNUTLS_FATAL_ERR_CMD(ret, goto error);
 	}
 
 	return 0;
+error:
+    syslog(LOG_ERR, "error: aborting execution %s", __func__);
+    abort();
 }
 
 unsigned need_file_reload(const char *file, time_t last_access)
@@ -968,13 +1000,13 @@ void tls_load_files(main_server_st *s, struct vhost_cfg_st *vhost)
 #endif
 
 	ret = gnutls_certificate_allocate_credentials(&vhost->creds.xcred);
-	GNUTLS_FATAL_ERR(ret);
+	GNUTLS_FATAL_ERR_CMD(ret, goto error);
 
 	set_dh_params(s, vhost);
 
 	if (vhost->perm_config.key_size == 0 || vhost->perm_config.cert_size == 0) {
 		mslog(s, NULL, LOG_ERR, "no certificate or key files were specified");
-		exit(EXIT_FAILURE);
+		goto error;
 	}
 
 	/* on reload reduce any checks done */
@@ -987,7 +1019,7 @@ void tls_load_files(main_server_st *s, struct vhost_cfg_st *vhost)
 	ret = load_cert_files(s, vhost);
 	if (ret < 0) {
 		mslog(s, NULL, LOG_ERR, "error loading the certificate or key file");
-		exit(EXIT_FAILURE);
+		goto error;
 	}
 
 	if (vhost->perm_config.config->cert_req != GNUTLS_CERT_IGNORE) {
@@ -999,7 +1031,7 @@ void tls_load_files(main_server_st *s, struct vhost_cfg_st *vhost)
 			if (ret < 0) {
 				mslog(s, NULL, LOG_ERR, "error setting the CA (%s) file",
 					vhost->perm_config.ca);
-				exit(EXIT_FAILURE);
+				goto error;
 			}
 
 			mslog(s, NULL, LOG_INFO, "processed %d CA certificate(s)", ret);
@@ -1012,6 +1044,11 @@ void tls_load_files(main_server_st *s, struct vhost_cfg_st *vhost)
 	}
 
 	tls_reload_ocsp(s, vhost);
+
+	return;
+error:
+    syslog(LOG_ERR, "error: aborting execution %s", __func__);
+    abort();
 }
 
 static int ocsp_get_func(gnutls_session_t session, void *ptr, gnutls_datum_t *response)
@@ -1064,7 +1101,12 @@ void tls_load_prio(main_server_st *s, struct vhost_cfg_st *vhost)
 	ret = gnutls_priority_init(&vhost->creds.cprio, vhost->perm_config.config->priorities, &perr);
 	if (ret == GNUTLS_E_PARSING_ERROR)
 		mslog(s, NULL, LOG_ERR, "error in TLS priority string: %s", perr);
-	GNUTLS_FATAL_ERR(ret);
+	GNUTLS_FATAL_ERR_CMD(ret, goto error);
+
+	return;
+error:
+    syslog(LOG_ERR, "error: aborting execution %s", __func__);
+    abort();
 }
 
 /*
@@ -1104,10 +1146,14 @@ void tls_reload_crl(main_server_st* s, struct vhost_cfg_st *vhost, unsigned forc
 			/* ignore the CRL file when empty */
 			mslog(s, NULL, LOG_ERR, "error reading the CRL (%s) file: %s",
 				vhost->perm_config.config->crl, gnutls_strerror(ret));
-			exit(EXIT_FAILURE);
+			goto error;
 		}
 		mslog(s, NULL, LOG_INFO, "loaded CRL: %s", vhost->perm_config.config->crl);
 	}
+    return;
+error:
+    syslog(LOG_ERR, "error: aborting execution %s", __func__);
+    abort();
 }
 #endif /* UNDER_TEST */
 
@@ -1137,17 +1183,17 @@ void *calc_sha1_hash(void *pool, char* file, unsigned cert)
 
 	if (cert != 0) {
 		ret = gnutls_x509_crt_init(&crt);
-		GNUTLS_FATAL_ERR(ret);
+		GNUTLS_FATAL_ERR_CMD(ret, goto error);
 
 		ret = gnutls_x509_crt_import(crt, &data, GNUTLS_X509_FMT_PEM);
 		if (ret == GNUTLS_E_BASE64_DECODING_ERROR)
 			ret = gnutls_x509_crt_import(crt, &data, GNUTLS_X509_FMT_DER);
-		GNUTLS_FATAL_ERR(ret);
+		GNUTLS_FATAL_ERR_CMD(ret, goto error);
 
 		gnutls_free(data.data);
 
 		ret = gnutls_x509_crt_export2(crt, GNUTLS_X509_FMT_DER, &data);
-		GNUTLS_FATAL_ERR(ret);
+		GNUTLS_FATAL_ERR_CMD(ret, goto error);
 		gnutls_x509_crt_deinit(crt);
 	}
 
@@ -1156,14 +1202,14 @@ void *calc_sha1_hash(void *pool, char* file, unsigned cert)
 
 	if (ret < 0) {
 		fprintf(stderr, "error calculating hash of '%s': %s", file, gnutls_strerror(ret));
-		exit(EXIT_FAILURE);
-	}
+        goto error;
+    }
 
 	size_t ret_size = sizeof(digest)*2+1;
 	retval = talloc_size(pool, ret_size);
 	if (retval == NULL) {
 		fprintf(stderr, "memory error");
-		exit(EXIT_FAILURE);
+		goto error;
 	}
 
 	data.data = digest;
@@ -1171,7 +1217,7 @@ void *calc_sha1_hash(void *pool, char* file, unsigned cert)
 	ret = gnutls_hex_encode(&data, retval, &ret_size);
 	if (ret < 0) {
 		fprintf(stderr, "error in hex encode: %s", gnutls_strerror(ret));
-		exit(EXIT_FAILURE);
+		goto error;
 	}
 	if (retval[ret_size-1] == 0) ret_size--; /* remove the null terminator */
 
@@ -1180,6 +1226,10 @@ void *calc_sha1_hash(void *pool, char* file, unsigned cert)
 	        retval[i] = toupper(retval[i]);
 
 	return retval;
+
+error:
+    syslog(LOG_ERR, "error: aborting execution %s", __func__);
+    abort();
 }
 
 
